@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "demo-cwc",
+    "deployments": "cwc-ch"
+  },
+  "targets": {},
+  "etags": {}
+}
