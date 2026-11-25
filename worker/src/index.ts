@@ -9,7 +9,7 @@
  */
 import type { Env } from './env';
 import { authenticate, requireRole, ROLES, type Caller } from './auth';
-import { cleanSmsBody, normalizeList, pj } from './profjero';
+import { cleanSmsBody, normalizeList, normalizePlatform, normalizePricing, pj } from './profjero';
 import { signUpload } from './cloudinary';
 import { sendWebPush, type PushSub } from './webpush';
 import { createDocument, deleteDocument, listDocuments, runQuery, getDocument, setDocument, type Doc } from './firestore';
@@ -143,8 +143,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (!env.VAPID_PUBLIC_KEY) throw new HttpError(503, 'Push is not configured', 'not_configured');
     return json({ publicKey: env.VAPID_PUBLIC_KEY }, 200, { 'Cache-Control': 'public, max-age=3600' });
   }
-  if (path === '/v1/sms/pricing' && m === 'GET') return relay(await pj(env, '/v1/pricing', { auth: false }));
-  if (path === '/v1/sms/platform' && m === 'GET') return relay(await pj(env, '/v1/platform', { auth: false }));
+  if (path === '/v1/sms/pricing' && m === 'GET') return relay(await pj(env, '/v1/pricing', { auth: false }), normalizePricing);
+  if (path === '/v1/sms/platform' && m === 'GET') return relay(await pj(env, '/v1/platform', { auth: false }), normalizePlatform);
 
   // Everything below requires a signed-in, active user
   const caller = await authenticate(req, env);

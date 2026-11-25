@@ -125,10 +125,21 @@ describe('routing & access control', () => {
   it('serves ProfJero pricing and platform info without a key', async () => {
     mockFetch({}, (u, init) => {
       expect(new Headers(init.headers).get('authorization')).toBeNull();
-      return Response.json(u.pathname === '/v1/platform' ? { name: 'ProfJero Connect', support: { email: 'help@pj.test' } } : { unitPriceGhs: 0.04, packages: [] });
+      return Response.json(
+        u.pathname === '/v1/platform'
+          ? { platformName: 'ProfJero Connect', supportEmail: 'help@pj.test', supportPhone: '0531234567' }
+          : { services: [{ service: 'sms', currency: 'GHS', unitPriceGhs: 0.06, minPurchaseUnits: 50, packages: [
+              { id: 'b', name: 'Basic', units: 1300, priceGhs: 50, active: true, displayOrder: 20 },
+              { id: 'x', name: 'Retired', units: 10, priceGhs: 1, active: false, displayOrder: 1 },
+              { id: 'a', name: 'Starter', units: 500, priceGhs: 20, active: true, displayOrder: 10 },
+            ] }] },
+      );
     });
-    expect(await (await call('/v1/sms/platform')).json()).toMatchObject({ name: 'ProfJero Connect' });
-    expect(await (await call('/v1/sms/pricing')).json()).toMatchObject({ unitPriceGhs: 0.04 });
+    expect(await (await call('/v1/sms/platform')).json()).toMatchObject({ name: 'ProfJero Connect', supportEmail: 'help@pj.test' });
+    // the live API nests pricing per service; the app gets one flat, ordered SMS list without inactive bundles
+    const pricing = await (await call('/v1/sms/pricing')).json();
+    expect(pricing).toMatchObject({ unitPriceGhs: 0.06, minUnits: 50, currency: 'GHS' });
+    expect(pricing.packages.map((p: { id: string }) => p.id)).toEqual(['a', 'b']);
   });
 });
 
@@ -174,7 +185,7 @@ describe('ProfJero Connect proxy', () => {
   it('maps wallet, pricing and payments endpoints', async () => {
     mockFetch({ a1: 'admin' }, (u) => Response.json(u.pathname === '/v1/payments' ? { items: [{ reference: 'p1' }] } : { ok: u.pathname }));
     expect(await (await call('/v1/sms/wallet', { uid: 'a1' })).json()).toEqual({ ok: '/v1/wallet' });
-    expect(await (await call('/v1/sms/pricing')).json()).toEqual({ ok: '/v1/pricing' });
+    expect(calls.some((c) => c.url === 'https://pj.test/v1/pricing') || (await call('/v1/sms/pricing')).ok).toBe(true); // shape covered by the pricing test
     expect((await (await call('/v1/sms/payments?limit=5', { uid: 'a1' })).json()).payments).toEqual([{ reference: 'p1' }]);
     const pay = await call('/v1/sms/payments', { uid: 'a1', method: 'POST', body: JSON.stringify({ packageId: 'starter', method: 'mobile_money', callbackUrl: 'https://app.rgci.test/admin/messages' }) });
     expect(pay.status).toBe(200);

@@ -145,15 +145,15 @@ test('admin buys SMS units through ProfJero checkout and the wallet is credited'
   const page = await (await as(browser, 'admin', { width: 1280, height: 900 })).newPage();
   await page.goto('/admin/messages?tab=wallet');
   const before = Number((await page.getByTestId('sms-units').innerText()).replace(/\D/g, ''));
-  await page.getByRole('radio', { name: /Ministry/ }).click();
+  await page.getByRole('radio', { name: /Enterprise/ }).click();
   await expect(page.getByText('Best value')).toBeVisible();
   await page.getByRole('radio', { name: /Debit or credit card/ }).click();
-  await expect(page.getByText('GH₵ 340.00').last()).toBeVisible();
+  await expect(page.getByText('GH₵ 1,000.00').last()).toBeVisible();
   await page.getByRole('button', { name: 'Continue to secure checkout' }).click();
   // the mock checkout returns straight to the app with the payment reference
-  await expect(page.getByText('Payment received — 10,000 units added')).toBeVisible();
+  await expect(page.getByText('Payment received — 30,000 units added')).toBeVisible();
   await expect(page.getByText('Paid').first()).toBeVisible();
-  await expect.poll(async () => Number((await page.getByTestId('sms-units').innerText()).replace(/\D/g, ''))).toBeGreaterThan(before + 9000); // other tests may spend a few units from the shared mock wallet meanwhile
+  await expect.poll(async () => Number((await page.getByTestId('sms-units').innerText()).replace(/\D/g, ''))).toBeGreaterThan(before + 29000); // other tests may spend a few units from the shared mock wallet meanwhile
   await expect(page.getByTestId('header-sms-units')).not.toHaveText('…');
 });
 
@@ -163,7 +163,7 @@ test('a custom unit amount is priced before checkout', async ({ browser, request
   await page.goto('/admin/messages?tab=wallet');
   await page.getByRole('radio', { name: /Custom amount/ }).click();
   await page.getByRole('button', { name: '2,500' }).click();
-  await expect(page.getByText('≈ GH₵ 100.00')).toBeVisible();
+  await expect(page.getByText('≈ GH₵ 150.00')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Continue to secure checkout' })).toBeEnabled();
 });
 

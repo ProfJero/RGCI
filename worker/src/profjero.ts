@@ -64,3 +64,33 @@ export function normalizeList(body: unknown, key: string) {
   const arr = (b[key] ?? b.items ?? b.data ?? b.results ?? (Array.isArray(body) ? body : [])) as unknown[];
   return { [key]: Array.isArray(arr) ? arr : [], nextCursor: (b.nextCursor ?? null) as string | null, totals: b.totals };
 }
+
+interface RawPackage { id: string; name?: string; units: number; priceGhs?: number; amountGhs?: number; effectiveRate?: number; description?: string | null; active?: boolean; displayOrder?: number; popular?: boolean }
+interface RawService { service?: string; currency?: string; unitPriceGhs?: number; minPurchaseUnits?: number; maxPurchaseUnits?: number | null; active?: boolean; packages?: RawPackage[] }
+
+/**
+ * ProfJero Connect publishes pricing per service ({ services: [{ service: "sms", … }] }).
+ * The app wants one flat SMS price list; older flat responses pass through unchanged.
+ */
+export function normalizePricing(body: unknown) {
+  const b = (body ?? {}) as RawService & { services?: RawService[]; packages?: RawPackage[] };
+  const svc: RawService = Array.isArray(b.services) ? (b.services.find((s) => s.service === 'sms') ?? b.services[0] ?? {}) : b;
+  const packages = (svc.packages ?? [])
+    .filter((p) => p.active !== false && p.units > 0)
+    .sort((x, y) => (x.displayOrder ?? 0) - (y.displayOrder ?? 0) || x.units - y.units)
+    .map((p) => ({ id: p.id, name: p.name ?? p.id, units: p.units, priceGhs: p.priceGhs ?? p.amountGhs ?? 0, effectiveRate: p.effectiveRate, description: p.description ?? undefined, popular: p.popular }));
+  return {
+    currency: svc.currency ?? 'GHS',
+    unitPriceGhs: svc.unitPriceGhs,
+    minUnits: svc.minPurchaseUnits ?? 1,
+    maxUnits: svc.maxPurchaseUnits ?? null,
+    active: svc.active !== false,
+    packages,
+  };
+}
+
+/** Platform info, with the field names the app reads. */
+export function normalizePlatform(body: unknown) {
+  const b = (body ?? {}) as Record<string, unknown>;
+  return { ...b, name: b.name ?? b.platformName, supportEmail: b.supportEmail, supportPhone: b.supportPhone };
+}

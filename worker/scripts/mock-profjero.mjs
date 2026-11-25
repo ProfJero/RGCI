@@ -21,8 +21,14 @@ http.createServer(async (req, res) => {
   let body = '';
   for await (const c of req) body += c;
   const json = body ? JSON.parse(body) : {};
-  if (url.pathname === '/v1/pricing') return send(res, 200, { unitPriceGhs: 0.04, currency: 'GHS', packages: [{ id: 'starter', name: 'Starter', units: 500, amountGhs: 20 }, { id: 'church', name: 'Church', units: 3000, amountGhs: 110, popular: true }, { id: 'ministry', name: 'Ministry', units: 10000, amountGhs: 340 }] });
-  if (url.pathname === '/v1/platform') return send(res, 200, { name: 'ProfJero Connect', support: { email: 'support@profjero.example', phone: '+233200000000', whatsapp: '+233200000000' } });
+  // Same shapes as the live API (nested per-service pricing).
+  if (url.pathname === '/v1/pricing') return send(res, 200, { services: [{ service: 'sms', currency: 'GHS', unitPriceGhs: 0.06, minPurchaseUnits: 50, maxPurchaseUnits: null, active: true, packages: [
+    { id: 'starter', service: 'sms', name: 'Starter', units: 500, priceGhs: 20, effectiveRate: 0.04, description: null, active: true, displayOrder: 10 },
+    { id: 'church', service: 'sms', name: 'Growth', units: 2750, priceGhs: 100, effectiveRate: 0.036364, description: null, active: true, displayOrder: 30 },
+    { id: 'retired', service: 'sms', name: 'Old bundle', units: 100, priceGhs: 5, active: false, displayOrder: 5 },
+    { id: 'ministry', service: 'sms', name: 'Enterprise', units: 30000, priceGhs: 1000, effectiveRate: 0.033333, description: null, active: true, displayOrder: 60 },
+  ] }] });
+  if (url.pathname === '/v1/platform') return send(res, 200, { platformName: 'ProfJero Connect', supportEmail: 'support@profjero.example', supportPhone: '0200000000', customerSignupsEnabled: true });
   if (req.headers.authorization !== 'Bearer pk_live_test') return err(res, 401, 'Missing, invalid, revoked or expired API key.');
   const p = url.pathname;
   if (p === '/v1/balance') return send(res, 200, { availableUnits: units, lowBalance: units < 100, updatedAt: new Date().toISOString() });
@@ -39,8 +45,8 @@ http.createServer(async (req, res) => {
     const key = req.headers['idempotency-key'];
     if (!key) return err(res, 400, 'Idempotency-Key header is required');
     if (idem.has(key)) return send(res, 200, idem.get(key));
-    const pkgs = { starter: [500, 20], church: [3000, 110], ministry: [10000, 340] };
-    const [u, a] = json.packageId ? pkgs[json.packageId] ?? [] : [json.units, +(json.units * 0.04).toFixed(2)];
+    const pkgs = { starter: [500, 20], church: [2750, 100], ministry: [30000, 1000] };
+    const [u, a] = json.packageId ? pkgs[json.packageId] ?? [] : [json.units, +(json.units * 0.06).toFixed(2)];
     if (!u) return err(res, 400, 'Unknown package');
     const reference = 'pja_' + crypto.randomUUID().replace(/-/g, '').slice(0, 24);
     const payment = { reference, packageId: json.packageId ?? null, units: u, amountGhs: a, currency: 'GHS', status: 'pending', method: json.method ?? null, paidAt: null, walletCreditedAt: null, createdAt: new Date().toISOString() };
