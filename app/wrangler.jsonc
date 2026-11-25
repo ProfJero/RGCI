@@ -1,0 +1,12 @@
+// The RGCI app on Cloudflare Workers static assets (SPA routing, headers from public/_headers).
+// Deploy: npm run deploy   →   https://rgci-app.rgcinternational001.workers.dev
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rgci-app",
+  "compatibility_date": "2026-11-23",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

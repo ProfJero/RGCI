@@ -137,14 +137,19 @@ npm run deploy     # → https://rgci-api.<your-subdomain>.workers.dev  (put thi
 Signed uploads are used by default (the Worker signs; nothing secret in the app). Alternatively set `VITE_CLOUDINARY_UPLOAD_PRESET` to an **unsigned** preset. Uploads are resized on the phone before sending to save data, and served with automatic format/quality.
 
 ### 5. Deploy the app
-**Cloudflare Pages** (recommended — same account as the Worker). `app/public/_headers` carries the caching and security headers; Pages serves `index.html` for app routes automatically.
+**Cloudflare Workers static assets** (same account as the API). `app/wrangler.jsonc` serves `app/dist` with single-page-app routing; `app/public/_headers` sets caching and security headers. `app/.env.production` holds the public Firebase web config for `rgci-management` and the API URL.
 ```bash
-cd app && npm run build
-npx wrangler pages deploy dist --project-name rgci-app --branch main
+cd app && npm run deploy        # build + wrangler deploy → https://rgci-app.rgcinternational001.workers.dev
 ```
-Add the Pages URL (and any custom domain) to the Worker's `ALLOWED_ORIGINS`, and the domain to **Firebase → Authentication → Settings → Authorized domains**.
+Keep every app URL (and any custom domain) in the Worker's `ALLOWED_ORIGINS` (`worker/wrangler.toml`) and in **Firebase → Authentication → Settings → Authorized domains**.
 
 Firebase Hosting also works (`npm run deploy:hosting`, configured in `firebase.json`).
+
+### Live deployment
+| | URL |
+|---|---|
+| App | https://rgci-app.rgcinternational001.workers.dev |
+| API Worker | https://rgci-api.rgcinternational001.workers.dev (`/v1/health`) |
 
 ### 6. First run
 Open the app → **Sign in** page shows *“First time here? Set up”* → create the **Super Admin** account. This page locks itself permanently after first use (enforced by security rules). Then:

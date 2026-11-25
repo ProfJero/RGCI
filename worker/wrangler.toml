@@ -5,17 +5,17 @@ compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-FIREBASE_PROJECT_ID = "your-firebase-project-id"
+FIREBASE_PROJECT_ID = "rgci-management"
 # Comma-separated list of origins allowed to call the API (your app URLs)
-ALLOWED_ORIGINS = "https://your-app.web.app,http://localhost:5173"
+ALLOWED_ORIGINS = "https://rgci-app.rgcinternational001.workers.dev,https://rgci-app.pages.dev,https://myrgci.pages.dev,http://localhost:5173"
 PROFJERO_BASE_URL = "https://profjero-sms-api-prod.amoakob947.workers.dev"
-PROFJERO_SENDER_ID = ""
-VAPID_SUBJECT = "mailto:admin@example.com"
+PROFJERO_SENDER_ID = "RGCI"
+VAPID_SUBJECT = "mailto:rgcinternational001@gmail.com"
 CLOUDINARY_CLOUD_NAME = ""
 # "true" only for local development against the Firebase emulators
 EMULATOR = "false"
 
-# Daily jobs (UTC — the same as Ghana time): birthday SMS at 07:00
+# Daily jobs (UTC — the same as Ghana time) at 07:00: birthday & anniversary SMS, low SMS balance alert
 [triggers]
 crons = ["0 7 * * *"]
 
