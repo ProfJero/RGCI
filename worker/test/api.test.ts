@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import worker, { birthdayJob } from '../src/index';
+import worker, { anniversaryJob, birthdayJob, lowBalanceJob } from '../src/index';
 import { verifyIdToken } from '../src/auth';
 import { b64urlEncode, utf8 } from '../src/util';
 import type { Env } from '../src/env';
 
-const PID = 'demo-cwc';
+const PID = 'demo-rgci';
 const baseEnv: Env = {
   FIREBASE_PROJECT_ID: PID,
-  ALLOWED_ORIGINS: 'https://app.cwc.test',
+  ALLOWED_ORIGINS: 'https://app.rgci.test',
   PROFJERO_BASE_URL: 'https://pj.test',
   PROFJERO_API_KEY: 'pk_live_secret',
-  PROFJERO_SENDER_ID: 'CWC',
+  PROFJERO_SENDER_ID: 'RGCI',
   EMULATOR: 'true',
   FIRESTORE_EMULATOR_URL: 'https://fs.test',
 };
@@ -42,7 +42,7 @@ function mockFetch(roles: Record<string, string>, extra?: Handler) {
 
 const call = (path: string, init: RequestInit & { uid?: string } = {}, env: Env = baseEnv) => {
   const headers = new Headers(init.headers);
-  headers.set('origin', 'https://app.cwc.test');
+  headers.set('origin', 'https://app.rgci.test');
   if (init.uid) headers.set('authorization', `Bearer ${unsignedToken(init.uid)}`);
   return worker.fetch(new Request(`https://api.test${path}`, { ...init, headers }), env);
 };
@@ -87,7 +87,7 @@ describe('routing & access control', () => {
     mockFetch({});
     const res = await call('/v1/health');
     expect(res.status).toBe(200);
-    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.cwc.test');
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.rgci.test');
     expect(await res.json()).toMatchObject({ ok: true, sms: true, push: false });
   });
   it('requires sign-in for SMS', async () => {
@@ -101,21 +101,44 @@ describe('routing & access control', () => {
     expect((await call('/v1/sms/balance', { uid: 'm1' })).status).toBe(403);
     expect((await call('/v1/sms/balance', { uid: 'd1' })).status).toBe(403);
   });
-  it('lets treasurers send receipts but not read the wallet', async () => {
-    mockFetch({ t1: 'treasurer' }, () => Response.json({ batch: { id: 'x' } }, { status: 201 }));
-    expect((await call('/v1/sms/wallet', { uid: 't1' })).status).toBe(403);
+  it('lets treasurers send receipts and buy units, but not read message logs', async () => {
+    mockFetch({ t1: 'treasurer' }, (u) => {
+      if (u.pathname === '/v1/wallet') return Response.json({ availableUnits: 5, reservedUnits: 0, totalUnits: 5 });
+      if (u.pathname === '/v1/payments') return Response.json({ payment: { reference: 'pja_1' }, checkoutUrl: 'https://pay.test/pja_1' }, { status: 201 });
+      return Response.json({ batch: { id: 'x' } }, { status: 201 });
+    });
+    expect((await call('/v1/sms/wallet', { uid: 't1' })).status).toBe(200);
+    const buy = await call('/v1/sms/payments', { uid: 't1', method: 'POST', body: JSON.stringify({ packageId: 'starter' }), headers: { 'Idempotency-Key': 'topup-123456' } });
+    expect(buy.status).toBe(201);
+    expect((await call('/v1/sms/batches', { uid: 't1' })).status).toBe(403);
+    expect((await call('/v1/sms/sender-ids', { uid: 't1' })).status).toBe(403);
     const res = await call('/v1/sms/send', { uid: 't1', method: 'POST', body: JSON.stringify({ message: 'Receipt', recipients: ['0241234567'] }), headers: { 'Idempotency-Key': 'receipt-12345' } });
     expect(res.status).toBe(201);
+  });
+  it('keeps unit purchases away from ushers and viewers', async () => {
+    mockFetch({ s1: 'staff', v1: 'viewer' });
+    for (const uid of ['s1', 'v1']) {
+      expect((await call('/v1/sms/payments', { uid, method: 'POST', body: JSON.stringify({ units: 100 }) })).status).toBe(403);
+      expect((await call('/v1/sms/wallet', { uid })).status).toBe(403);
+    }
+  });
+  it('serves ProfJero pricing and platform info without a key', async () => {
+    mockFetch({}, (u, init) => {
+      expect(new Headers(init.headers).get('authorization')).toBeNull();
+      return Response.json(u.pathname === '/v1/platform' ? { name: 'ProfJero Connect', support: { email: 'help@pj.test' } } : { unitPriceGhs: 0.04, packages: [] });
+    });
+    expect(await (await call('/v1/sms/platform')).json()).toMatchObject({ name: 'ProfJero Connect' });
+    expect(await (await call('/v1/sms/pricing')).json()).toMatchObject({ unitPriceGhs: 0.04 });
   });
 });
 
 describe('ProfJero Connect proxy', () => {
   it('forwards sends with the secret key, idempotency key, sender ID and normalised numbers', async () => {
-    mockFetch({ s1: 'secretary' }, () => Response.json({ batch: { id: 'cwc-key-0001', status: 'submitting' }, records: [] }, { status: 201 }));
+    mockFetch({ s1: 'secretary' }, () => Response.json({ batch: { id: 'rgci-key-0001', status: 'submitting' }, records: [] }, { status: 201 }));
     const res = await call('/v1/sms/send', {
       uid: 's1',
       method: 'POST',
-      headers: { 'Idempotency-Key': 'cwc-key-0001', 'Content-Type': 'application/json' },
+      headers: { 'Idempotency-Key': 'rgci-key-0001', 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Hi {first_name|Beloved}', recipients: [{ phone: '024 123 4567', fields: { first_name: 'Ama' } }, '0241234567', '+447700900123', 'bad'] }),
     });
     expect(res.status).toBe(201);
@@ -123,10 +146,10 @@ describe('ProfJero Connect proxy', () => {
     expect(pjCall.url).toBe('https://pj.test/v1/sms/send');
     const h = new Headers(pjCall.init.headers);
     expect(h.get('authorization')).toBe('Bearer pk_live_secret');
-    expect(h.get('idempotency-key')).toBe('cwc-key-0001');
+    expect(h.get('idempotency-key')).toBe('rgci-key-0001');
     expect(JSON.parse(String(pjCall.init.body))).toEqual({
       message: 'Hi {first_name|Beloved}',
-      senderId: 'CWC',
+      senderId: 'RGCI',
       recipients: [{ phone: '233241234567', fields: { first_name: 'Ama' } }, '447700900123'],
     });
   });
@@ -153,10 +176,10 @@ describe('ProfJero Connect proxy', () => {
     expect(await (await call('/v1/sms/wallet', { uid: 'a1' })).json()).toEqual({ ok: '/v1/wallet' });
     expect(await (await call('/v1/sms/pricing')).json()).toEqual({ ok: '/v1/pricing' });
     expect((await (await call('/v1/sms/payments?limit=5', { uid: 'a1' })).json()).payments).toEqual([{ reference: 'p1' }]);
-    const pay = await call('/v1/sms/payments', { uid: 'a1', method: 'POST', body: JSON.stringify({ packageId: 'starter', method: 'mobile_money', callbackUrl: 'https://app.cwc.test/admin/messages' }) });
+    const pay = await call('/v1/sms/payments', { uid: 'a1', method: 'POST', body: JSON.stringify({ packageId: 'starter', method: 'mobile_money', callbackUrl: 'https://app.rgci.test/admin/messages' }) });
     expect(pay.status).toBe(200);
     const last = calls[calls.length - 1];
-    expect(JSON.parse(String(last.init.body))).toEqual({ packageId: 'starter', method: 'mobile_money', callbackUrl: 'https://app.cwc.test/admin/messages' });
+    expect(JSON.parse(String(last.init.body))).toEqual({ packageId: 'starter', method: 'mobile_money', callbackUrl: 'https://app.rgci.test/admin/messages' });
     expect(new Headers(last.init.headers).get('idempotency-key')).toMatch(/^topup-/);
   });
 });
@@ -186,8 +209,8 @@ describe('push & media', () => {
     mockFetch({ m1: 'member', s1: 'secretary' });
     const ok = await call('/v1/media/sign', { uid: 'm1', method: 'POST', body: JSON.stringify({ folder: 'avatars' }) }, env);
     const body = await ok.json();
-    expect(body).toMatchObject({ apiKey: 'key', cloudName: 'demo', folder: 'cwc/avatars' });
-    const expected = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1', utf8(`folder=cwc/avatars&timestamp=${body.timestamp}secret`))), (b) => b.toString(16).padStart(2, '0')).join('');
+    expect(body).toMatchObject({ apiKey: 'key', cloudName: 'demo', folder: 'rgci/avatars' });
+    const expected = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1', utf8(`folder=rgci/avatars&timestamp=${body.timestamp}secret`))), (b) => b.toString(16).padStart(2, '0')).join('');
     expect(body.signature).toBe(expected);
     expect((await call('/v1/media/sign', { uid: 'm1', method: 'POST', body: JSON.stringify({ folder: 'events' }) }, env)).status).toBe(403);
     expect((await call('/v1/media/sign', { uid: 's1', method: 'POST', body: JSON.stringify({ folder: 'events' }) }, env)).status).toBe(200);
@@ -197,7 +220,7 @@ describe('push & media', () => {
 describe('birthday job', () => {
   it('sends one personalised, idempotent SMS to today’s birthdays', async () => {
     mockFetch({}, (u, init) => {
-      if (u.pathname.endsWith('/settings/church')) return Response.json({ name: 'x', fields: { autoBirthdaySms: { booleanValue: true }, birthdaySms: { stringValue: 'Happy birthday {first_name|Beloved}!' }, smsSenderId: { stringValue: 'CWC' } } });
+      if (u.pathname.endsWith('/settings/church')) return Response.json({ name: 'x', fields: { autoBirthdaySms: { booleanValue: true }, birthdaySms: { stringValue: 'Happy birthday {first_name|Beloved}!' }, smsSenderId: { stringValue: 'RGCI' } } });
       if (u.pathname.endsWith(':runQuery')) {
         expect(JSON.parse(String(init.body)).structuredQuery.where.fieldFilter.value).toEqual({ stringValue: '10-24' });
         return Response.json([
@@ -212,5 +235,61 @@ describe('birthday job', () => {
     const send = calls.find((c) => c.url === 'https://pj.test/v1/sms/send')!;
     expect(new Headers(send.init.headers).get('idempotency-key')).toBe('birthday-2026-10-24');
     expect(JSON.parse(String(send.init.body)).recipients).toEqual([{ phone: '233241111111', fields: { first_name: 'Ama' } }]);
+    // …and it is recorded in the app's SMS history under the same key
+    const record = calls.find((c) => c.url.endsWith('/sms_messages/birthday-2026-10-24'))!;
+    expect(record.init.method).toBe('PATCH');
+    expect(JSON.parse(String(record.init.body)).fields).toMatchObject({ automatic: { booleanValue: true }, recipients: { integerValue: '1' } });
+  });
+
+  it('sends anniversary wishes only when switched on', async () => {
+    let enabled = false;
+    mockFetch({}, (u, init) => {
+      if (u.pathname.endsWith('/settings/church')) return Response.json({ name: 'x', fields: { autoAnniversarySms: { booleanValue: enabled }, anniversarySms: { stringValue: 'Happy anniversary {first_name}!' } } });
+      if (u.pathname.endsWith(':runQuery')) {
+        expect(JSON.parse(String(init.body)).structuredQuery.where.fieldFilter.field.fieldPath).toBe('anniversaryMonthDay');
+        return Response.json([{ document: { name: 'x/members/1', fields: { phone: { stringValue: '233241111111' }, firstName: { stringValue: 'Efua' } } } }]);
+      }
+      return Response.json({ batch: { status: 'completed' } }, { status: 201 });
+    });
+    expect(await anniversaryJob(baseEnv, new Date('2026-12-05T07:00:00Z'))).toMatchObject({ skipped: 'disabled' });
+    enabled = true;
+    expect(await anniversaryJob(baseEnv, new Date('2026-12-05T07:00:00Z'))).toMatchObject({ sent: 1 });
+    const send = calls.find((c) => c.url === 'https://pj.test/v1/sms/send')!;
+    expect(new Headers(send.init.headers).get('idempotency-key')).toBe('anniversary-2026-12-05');
+  });
+});
+
+describe('low balance alert', () => {
+  const settings = (fields: Record<string, unknown> = {}) => Response.json({ name: 'x', fields });
+  it('does nothing while the wallet is healthy', async () => {
+    mockFetch({}, (u) => (u.pathname.endsWith('/settings/church') ? settings() : Response.json({ availableUnits: 900, lowBalance: false })));
+    expect(await lowBalanceJob(baseEnv)).toMatchObject({ low: false, units: 900 });
+    expect(calls.some((c) => c.url.includes('/notifications'))).toBe(false);
+  });
+  it('notifies the people who can top up when below the church threshold', async () => {
+    mockFetch({}, (u, init) => {
+      if (u.pathname.endsWith('/settings/church')) return settings({ smsLowBalanceUnits: { integerValue: '300' } });
+      if (u.pathname === '/v1/balance') return Response.json({ availableUnits: 250, lowBalance: false });
+      if (u.pathname.endsWith(':runQuery')) {
+        const q = JSON.parse(String(init.body)).structuredQuery;
+        if (q.from[0].collectionId === 'users') {
+          return Response.json([
+            { document: { name: 'x/users/a1', fields: { role: { stringValue: 'admin' }, isActive: { booleanValue: true } } } },
+            { document: { name: 'x/users/t1', fields: { role: { stringValue: 'treasurer' }, isActive: { booleanValue: false } } } },
+          ]);
+        }
+        return Response.json([]);
+      }
+      if (u.pathname.endsWith('/notifications')) return Response.json({ name: 'x/notifications/n1' });
+      return new Response('unexpected', { status: 599 });
+    });
+    expect(await lowBalanceJob(baseEnv)).toMatchObject({ low: true, units: 250, notified: 1 });
+    const n = calls.filter((c) => c.url.endsWith('/notifications'));
+    expect(n).toHaveLength(1);
+    expect(JSON.parse(String(n[0].init.body)).fields).toMatchObject({ audience: { stringValue: 'a1' }, url: { stringValue: '/admin/messages?tab=wallet' } });
+  });
+  it('can be switched off in Settings', async () => {
+    mockFetch({}, () => settings({ smsLowBalanceAlert: { booleanValue: false } }));
+    expect(await lowBalanceJob(baseEnv)).toMatchObject({ skipped: 'disabled' });
   });
 });

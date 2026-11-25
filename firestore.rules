@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Christian Worship Centre — Firestore security rules.
+// Restoration Grace Chapel International — Firestore security rules.
 // Mirrors the role matrix in app/src/lib/permissions.ts. The UI hides what a role
 // can't do; these rules are what actually enforce it.
 // Crafted by ProfJero.
@@ -76,7 +76,7 @@ service cloud.firestore {
       allow create: if peopleManage();
       allow update: if peopleManage() || (signedIn() && myMemberId() == memberId && onlyChanges([
         'phone', 'altPhone', 'email', 'address', 'gpsAddress', 'occupation', 'photoUrl', 'dob', 'birthMonthDay',
-        'maritalStatus', 'anniversary', 'emergencyName', 'emergencyPhone', 'emergencyRelation', 'keywords', 'updatedAt', 'smsOptOut'
+        'maritalStatus', 'anniversary', 'anniversaryMonthDay', 'emergencyName', 'emergencyPhone', 'emergencyRelation', 'keywords', 'updatedAt', 'smsOptOut'
       ]));
       allow delete: if admin();
     }

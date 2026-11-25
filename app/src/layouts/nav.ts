@@ -36,7 +36,7 @@ export const ADMIN_NAV: { label: string; items: NavItem[] }[] = [
     label: 'Engage',
     items: [
       { to: '/admin/giving', label: 'Giving & finance', icon: HandCoins, permission: 'giving.view' },
-      { to: '/admin/messages', label: 'Messages', icon: MessageSquareText, anyOf: ['messaging.sms', 'messaging.push'] },
+      { to: '/admin/messages', label: 'Messages', icon: MessageSquareText, anyOf: ['messaging.sms', 'messaging.push', 'messaging.billing'] },
     ],
   },
   {

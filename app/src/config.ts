@@ -19,9 +19,9 @@ export const config = {
 
 /** Defaults shown until the church profile is saved in Settings. */
 export const CHURCH_DEFAULTS = {
-  name: 'Christian Worship Centre',
-  shortName: 'CWC',
-  tagline: 'Worship • Word • World',
+  name: 'Restoration Grace Chapel International',
+  shortName: 'RGCI',
+  tagline: 'Restoring lives by grace',
   currency: 'GHS',
   timezone: 'Africa/Accra',
   country: 'GH',

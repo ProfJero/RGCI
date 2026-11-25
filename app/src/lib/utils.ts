@@ -29,8 +29,8 @@ export function uid(prefix = '') {
   return prefix + Array.from(rnd, (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 16);
 }
 
-/** Short, human-friendly receipt numbers, e.g. CWC-2610-7KQ4M. */
-export function receiptNumber(prefix = 'CWC', date = new Date()) {
+/** Short, human-friendly receipt numbers, e.g. RGCI-2610-7KQ4M. */
+export function receiptNumber(prefix = 'RGCI', date = new Date()) {
   const yymm = `${String(date.getFullYear()).slice(2)}${String(date.getMonth() + 1).padStart(2, '0')}`;
   const alphabet = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
   const rnd = crypto.getRandomValues(new Uint8Array(5));

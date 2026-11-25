@@ -29,6 +29,37 @@ function b64urlToBytes(s: string) {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
+let publicKeyCache: Promise<Uint8Array> | null = null;
+function serverKey() {
+  publicKeyCache ??= api<{ publicKey: string }>('/v1/push/public-key')
+    .then((r) => b64urlToBytes(r.publicKey))
+    .catch((e) => {
+      publicKeyCache = null;
+      throw e;
+    });
+  return publicKeyCache;
+}
+
+/** True when the subscription was made for this server's VAPID key (not, e.g., the old RGCI push worker's). */
+function matchesKey(sub: PushSubscription, key: Uint8Array) {
+  const own = sub.options?.applicationServerKey;
+  if (!own) return true; // browser doesn't expose it — assume fine
+  const a = new Uint8Array(own);
+  return a.length === key.length && a.every((b, i) => b === key[i]);
+}
+
+/** Returns a subscription for the current key, replacing one made with an older key. */
+async function ensureSubscription(reg: ServiceWorkerRegistration) {
+  const key = await serverKey();
+  let sub = await reg.pushManager.getSubscription();
+  if (sub && !matchesKey(sub, key)) {
+    await deleteDoc(doc(db, 'push_subscriptions', await sha256(sub.endpoint))).catch(() => {});
+    await sub.unsubscribe().catch(() => {});
+    sub = null;
+  }
+  return sub ?? reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key as BufferSource });
+}
+
 export async function getPushState(): Promise<PushState> {
   if (!pushSupported()) return 'unsupported';
   if (Notification.permission === 'denied') return 'denied';
@@ -40,15 +71,11 @@ export async function getPushState(): Promise<PushState> {
 
 export async function enablePush(uid: string): Promise<PushState> {
   if (!pushSupported()) return 'unsupported';
-  if (!apiConfigured()) throw new Error('Notifications need the CWC API (VITE_API_URL) to be configured.');
+  if (!apiConfigured()) throw new Error('Notifications need the RGCI API (VITE_API_URL) to be configured.');
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return permission === 'denied' ? 'denied' : 'default';
   const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
-  if (!sub) {
-    const { publicKey } = await api<{ publicKey: string }>('/v1/push/public-key');
-    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(publicKey) });
-  }
+  const sub = await ensureSubscription(reg);
   await saveSubscription(uid, sub);
   return 'subscribed';
 }
@@ -74,12 +101,20 @@ export async function disablePush(): Promise<PushState> {
   return 'unsubscribed';
 }
 
-/** Keep the stored subscription fresh for signed-in users (endpoints rotate). */
+/**
+ * Keep the stored subscription fresh for signed-in users (endpoints rotate), and
+ * quietly move devices still subscribed with an old VAPID key onto the current one.
+ */
 export async function refreshPushSubscription(uid: string) {
   if (!pushSupported() || Notification.permission !== 'granted') return;
-  const reg = await navigator.serviceWorker.getRegistration();
-  const sub = await reg?.pushManager.getSubscription();
-  if (sub) await saveSubscription(uid, sub).catch(() => {});
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || !(await reg.pushManager.getSubscription())) return;
+    const sub = apiConfigured() ? await ensureSubscription(reg) : await reg.pushManager.getSubscription();
+    if (sub) await saveSubscription(uid, sub);
+  } catch {
+    /* offline or push service unavailable — try again next launch */
+  }
 }
 
 export interface PushSendInput {

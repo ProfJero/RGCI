@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router';
-import { CwcLogo, Signature } from '@/components/brand';
+import { ChurchLogo, Signature } from '@/components/brand';
 import { useChurch } from '@/lib/settings';
 
 export default function AuthLayout() {
@@ -7,11 +7,11 @@ export default function AuthLayout() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
       <aside className="relative hidden overflow-hidden bg-brand-900 text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_60%_at_20%_10%,rgb(59_99_241/0.45),transparent_60%),radial-gradient(60%_50%_at_90%_90%,rgb(201_154_46/0.25),transparent_60%)]" />
-        <CwcLogo className="pointer-events-none absolute -bottom-16 -right-24 w-[620px] text-white/[0.06]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_60%_at_20%_10%,rgb(138_82_239/0.45),transparent_60%),radial-gradient(60%_50%_at_90%_90%,rgb(201_154_46/0.25),transparent_60%)]" />
+        <ChurchLogo className="pointer-events-none absolute -bottom-24 -right-28 w-[480px] text-white/[0.06]" />
         <Link to="/welcome" className="relative flex items-center gap-3">
           <span className="grid size-11 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur">
-            <CwcLogo className="w-8 text-white" weight={20} />
+            <ChurchLogo className="w-8 text-gold-300" weight={20} />
           </span>
           <span className="text-[15px] font-semibold tracking-tight">{church.name}</span>
         </Link>
@@ -30,7 +30,7 @@ export default function AuthLayout() {
         <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-10">
           <Link to="/welcome" className="mb-8 flex items-center gap-3 lg:hidden">
             <span className="grid size-11 place-items-center rounded-xl bg-brand-800 text-white">
-              <CwcLogo className="w-8" weight={20} />
+              <ChurchLogo className="w-8" weight={20} />
             </span>
             <span className="text-[15px] font-semibold tracking-tight">{church.name}</span>
           </Link>

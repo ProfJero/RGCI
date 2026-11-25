@@ -11,7 +11,7 @@ import { cld } from '@/lib/cloudinary';
 import { downloadBlob, icsFor, shareOrCopy } from '@/lib/files';
 import { Button, buttonClass } from '@/components/ui/button';
 import { EmptyState, FullPageLoader } from '@/components/ui/feedback';
-import { CwcLogo } from '@/components/brand';
+import { ChurchLogo } from '@/components/brand';
 import { MemberPage } from './ui';
 
 export default function EventDetail() {
@@ -60,7 +60,7 @@ export default function EventDetail() {
     <MemberPage back={{ to: '/events', label: 'Events' }}>
       <div className="mx-auto max-w-3xl">
         <div className="relative -mx-4 aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,var(--color-brand-800),var(--color-brand-600))] sm:mx-0 sm:rounded-3xl">
-          {e.imageUrl ? <img src={cld(e.imageUrl, { w: 1200 })} alt="" className="size-full object-cover" /> : <CwcLogo className="absolute -bottom-10 -right-10 w-72 text-white/10" />}
+          {e.imageUrl ? <img src={cld(e.imageUrl, { w: 1200 })} alt="" className="size-full object-cover" /> : <ChurchLogo className="absolute -bottom-10 -right-10 w-72 text-white/10" />}
         </div>
         <p className="mt-5 text-sm font-medium text-accent dark:text-brand-300">{e.category}</p>
         <h1 className="mt-1 text-[1.75rem] font-semibold leading-tight tracking-tight text-balance">{e.title}</h1>

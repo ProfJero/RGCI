@@ -102,3 +102,13 @@ export async function createDocument(env: Env, collection: string, token: string
   });
   if (!res.ok) throw new Error(`Firestore create in ${collection} failed: ${res.status}`);
 }
+
+/** Creates or replaces a document at a known path (used so automated sends keep their idempotency key as id). */
+export async function setDocument(env: Env, path: string, token: string, data: Record<string, unknown>) {
+  const res = await fetch(`${base(env)}/${path}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, encodeValue(v)])) }),
+  });
+  if (!res.ok) throw new Error(`Firestore set ${path} failed: ${res.status}`);
+}

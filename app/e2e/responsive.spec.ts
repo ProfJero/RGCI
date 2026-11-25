@@ -21,10 +21,10 @@ const PAGES: { role: string; paths: string[] }[] = [
       '/admin', '/admin/people', '/admin/people/mem-021', '/admin/people/import', '/admin/groups', '/admin/groups/grp-1',
       '/admin/follow-ups', '/admin/attendance', '/admin/attendance/svc-today-open', '/admin/giving', '/admin/events',
       '/admin/events/evt-1', '/admin/content', '/admin/care', '/admin/messages', '/admin/messages?tab=history',
-      '/admin/messages?tab=wallet', '/admin/messages?tab=push', '/admin/reports', '/admin/users', '/admin/settings', '/admin/audit',
+      '/admin/messages?tab=wallet', '/admin/messages?tab=scheduled', '/admin/messages?tab=senders', '/admin/messages?tab=push', '/admin/reports', '/admin/users', '/admin/settings', '/admin/audit',
     ],
   },
-  { role: 'treasurer', paths: ['/admin', '/admin/giving'] },
+  { role: 'treasurer', paths: ['/admin', '/admin/giving', '/admin/messages'] },
   { role: 'usher', paths: ['/admin', '/admin/attendance/svc-today-open'] },
   {
     role: 'member',

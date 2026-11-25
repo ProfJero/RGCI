@@ -27,7 +27,7 @@ export function registerServiceWorker() {
       // Check for updates when the app regains focus (PWAs can stay open for days).
       document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reg.update().catch(() => {}));
     } catch (e) {
-      console.warn('[cwc] service worker registration failed', e);
+      console.warn('[rgci] service worker registration failed', e);
     }
   });
 }

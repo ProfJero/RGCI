@@ -1,9 +1,9 @@
-# Christian Worship Centre — Church Management PWA
+# Restoration Grace Chapel International — Church Management PWA
 
-A complete church management system and member app for **Christian Worship Centre (CWC)**, built as an installable Progressive Web App that works on any phone, tablet or computer — and keeps working on patchy mobile data.
+A complete church management system and member app for **Restoration Grace Chapel International (RGCI)**, built as an installable Progressive Web App that works on any phone, tablet or computer — and keeps working on patchy mobile data.
 
 <p>
-  <img src="app/public/icons/icon-192.png" width="64" alt="CWC" />
+  <img src="app/public/icons/icon-192.png" width="64" alt="RGCI" />
 </p>
 
 **Designed & developed by ProfJero** — *Building Solutions. Empowering Lives.*
@@ -28,7 +28,7 @@ A complete church management system and member app for **Christian Worship Centr
 ### Church admin (staff)
 | Module | Highlights |
 |---|---|
-| **Dashboard** | Role-aware KPIs, Sunday attendance trend, income vs expenses, giving by category, birthdays this week, follow-ups, care inbox, upcoming events |
+| **Dashboard** | Role-aware KPIs, SMS credits at a glance, birthdays & wedding anniversaries this week, Sunday attendance trend, income vs expenses, giving by category, birthdays this week, follow-ups, care inbox, upcoming events |
 | **People** | Directory with search/filters, rich profiles (GhanaPost GPS, hometown/region, emergency contact, baptism), households, tags, bulk SMS/group/status actions, CSV import with auto column-matching & duplicate detection, CSV export |
 | **Groups & ministries** | Departments, fellowships, home cells/bacentas, committees; leaders; SMS a whole group |
 | **Follow-ups** | Kanban pipeline (drag & drop) for first-timers, new converts, absentees; notes, assignment, due dates |
@@ -37,13 +37,13 @@ A complete church management system and member app for **Christian Worship Centr
 | **Events** | Create/publish with banners, RSVPs list & export, push reminders, SMS attendees |
 | **Content** | Devotionals (schedule ahead), sermons (YouTube or audio upload), announcements (pinned, expiry) — with optional push on publish |
 | **Pastoral care** | Request inbox, assignment, replies that notify the member, private internal notes, care log (visits, hospital, counselling), testimony moderation |
-| **Messages** | SMS via **ProfJero Connect**: audience builder, personalisation (`{first_name|Beloved}`), live page/unit counter with Unicode warning & one-tap fix, cost check against wallet, scheduling, delivery tracking, templates, wallet & MoMo/card top-up; free push notifications |
+| **Messages** | SMS via **ProfJero Connect**: audience builder, personalisation (`{first_name|Beloved}`), live page/unit counter with Unicode warning & one-tap fix, cost check against wallet, scheduling, delivery tracking, templates; **SMS credits** — live wallet, buy units (bundles or custom amount) with Mobile Money or card through ProfJero checkout, automatic payment confirmation, purchase history and wallet activity; **Scheduled** — every scheduled/recurring campaign on the account with cancel; **Sender IDs** with approval status; **Delivery log** of every send on the account; free push notifications |
 | **Reports** | Growth, age profile, gender, group sizes, attendance, income/expenses, tithers per month; printable annual report; CSV |
 | **Users & roles** | Staff accounts, role changes, deactivation, link app accounts to member records (auto-match by phone), password resets |
-| **Settings** | Church profile, giving accounts, categories, service types, SMS defaults, welcome/birthday automation, integration health |
+| **Settings** | Church profile, giving accounts, categories, service types, SMS defaults, welcome/birthday/anniversary automation, low SMS-balance alerts, integration health |
 | **Activity log** | Append-only audit trail of important changes |
 
-Plus: ⌘K command palette, dark mode, offline mode, and layouts designed and tested from **320 px phones to 1920 px desktops**.
+Plus: a live SMS-balance chip in the admin header (turns amber when low), ⌘K command palette, dark mode, offline mode, and layouts designed and tested from **320 px phones to 1920 px desktops**.
 
 ### Roles
 
@@ -52,7 +52,7 @@ Plus: ⌘K command palette, dark mode, offline mode, and layouts designed and te
 | Super Admin | Everything, including creating other super admins |
 | Administrator | Everything except managing super admins |
 | Pastor | People, groups, follow-ups, attendance, giving (view), events, content, pastoral care, messaging, reports |
-| Treasurer | Giving, pledges, expenses, reports (+ SMS receipts) |
+| Treasurer | Giving, pledges, expenses, reports (+ SMS receipts, buying SMS units) |
 | Secretary | People, groups, follow-ups, attendance, events, content, messaging, reports |
 | Ministry Staff | Attendance check-in and follow-ups |
 | Viewer | Read-only dashboard, directory and reports |
@@ -126,22 +126,25 @@ npx wrangler secret put VAPID_PRIVATE_KEY
 npx wrangler secret put CLOUDINARY_API_KEY
 npx wrangler secret put CLOUDINARY_API_SECRET
 ```
-Edit `wrangler.toml` → `[vars]`: `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS` (your app URL), `PROFJERO_SENDER_ID` (e.g. `CWC`), `VAPID_SUBJECT` (`mailto:` your email), `CLOUDINARY_CLOUD_NAME`. Then:
+Edit `wrangler.toml` → `[vars]`: `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS` (your app URL), `PROFJERO_SENDER_ID` (e.g. `RGCI`), `VAPID_SUBJECT` (`mailto:` your email), `CLOUDINARY_CLOUD_NAME`. Then:
 ```bash
-npm run deploy     # → https://cwc-api.<your-subdomain>.workers.dev  (put this in app/.env as VITE_API_URL)
+npm run deploy     # → https://rgci-api.<your-subdomain>.workers.dev  (put this in app/.env as VITE_API_URL)
 ```
 
-**Optional automations** (daily birthday SMS at 7:00 AM Ghana time, admin password resets for phone-only accounts): create a service account key in Firebase → Project settings → Service accounts, then `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT` and paste the JSON. Turn on “Send birthday SMS automatically” in **Settings**.
+**Optional automations** (every morning at 7:00 AM Ghana time: birthday SMS, wedding-anniversary SMS, and a low SMS-balance alert to admins/pastors/secretaries/treasurer by in-app notification and push; plus admin password resets for phone-only accounts): create a service account key in Firebase → Project settings → Service accounts, then `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT` and paste the JSON. Switch each one on in **Settings → SMS** and **SMS balance alerts**. Automatic sends appear in **Messages → History** marked with a robot icon.
 
 ### 4. Cloudinary
 Signed uploads are used by default (the Worker signs; nothing secret in the app). Alternatively set `VITE_CLOUDINARY_UPLOAD_PRESET` to an **unsigned** preset. Uploads are resized on the phone before sending to save data, and served with automatic format/quality.
 
 ### 5. Deploy the app
-Firebase Hosting is configured in `firebase.json` (SPA rewrites, immutable asset caching, a no-cache service worker, security headers):
+**Cloudflare Pages** (recommended — same account as the Worker). `app/public/_headers` carries the caching and security headers; Pages serves `index.html` for app routes automatically.
 ```bash
-npm run deploy:hosting    # builds app/ and deploys
+cd app && npm run build
+npx wrangler pages deploy dist --project-name rgci-app --branch main
 ```
-Any static host works (Cloudflare Pages, Netlify) — serve `app/dist` with SPA fallback to `index.html` and don’t cache `sw.js`.
+Add the Pages URL (and any custom domain) to the Worker's `ALLOWED_ORIGINS`, and the domain to **Firebase → Authentication → Settings → Authorized domains**.
+
+Firebase Hosting also works (`npm run deploy:hosting`, configured in `firebase.json`).
 
 ### 6. First run
 Open the app → **Sign in** page shows *“First time here? Set up”* → create the **Super Admin** account. This page locks itself permanently after first use (enforced by security rules). Then:
@@ -151,6 +154,26 @@ Open the app → **Sign in** page shows *“First time here? Set up”* → crea
 4. Ask members to install the app (Share → *Add to Home Screen* on iPhone; *Install* on Android/desktop) and sign up with their phone number. Link their accounts to member records in **Users & roles** (matching phone numbers are suggested automatically).
 
 ---
+
+## Moving from the previous RGCI apps
+
+The earlier *RGCI Member Care* (`myrgci.pages.dev`) and *Ekklesia* (`rgcicare.pages.dev`) apps used the same Firebase project (`rgci-management`) with different collections, a separate push worker and Arkesel for SMS. This app replaces all of them:
+
+| Before | Now |
+|---|---|
+| `rgci-push-worker` (VAPID keys in client code, subscriptions in KV) | `rgci-api` Worker — new VAPID keys kept as secrets, subscriptions per user in Firestore |
+| `rgci-sms-api` (Arkesel) | `rgci-api` Worker → **ProfJero Connect** |
+| `devotions`, `pastoral_requests` | `devotionals`, `care_requests` |
+
+1. **Deploy the security rules and indexes** to `rgci-management` (`npm run deploy:rules` after `npx firebase use production`). Until then the old rules apply and most screens can't read or write.
+2. **Copy the old data** (dry run first; it never changes or deletes the old collections):
+   ```bash
+   GOOGLE_APPLICATION_CREDENTIALS=./service-account.json node scripts/migrate-legacy.mjs
+   GOOGLE_APPLICATION_CREDENTIALS=./service-account.json node scripts/migrate-legacy.mjs --apply
+   ```
+   Existing accounts keep their email & password. Accounts without a recognised role become **members**; promote staff in **Users & roles**.
+3. Members turn notifications on again from **Profile** — push subscriptions are tied to the new keys.
+4. When you're happy, point `myrgci.pages.dev` (or your custom domain) at the new app and retire the old workers.
 
 ## Development & testing
 
@@ -165,22 +188,22 @@ npm run seed
 cd app && npm run dev:emulator
 # optional — the Worker + a local ProfJero Connect mock
 cd worker && node scripts/mock-profjero.mjs &
-npx wrangler dev --var EMULATOR:true --var FIREBASE_PROJECT_ID:demo-cwc --var PROFJERO_BASE_URL:http://127.0.0.1:8790 --var "ALLOWED_ORIGINS:*" --var PROFJERO_SENDER_ID:CWC
+npx wrangler dev --var EMULATOR:true --var FIREBASE_PROJECT_ID:demo-rgci --var PROFJERO_BASE_URL:http://127.0.0.1:8790 --var "ALLOWED_ORIGINS:*" --var PROFJERO_SENDER_ID:RGCI
 ```
-Demo logins (emulator only, password `password123`): `admin@cwc.test`, `pastor@cwc.test`, `treasurer@cwc.test`, `secretary@cwc.test`, `usher@cwc.test`, `member@cwc.test`, and phone login `0241234567`. For the mock SMS API put `PROFJERO_API_KEY=pk_live_test` in `worker/.dev.vars`.
+Demo logins (emulator only, password `password123`): `admin@rgci.test`, `pastor@rgci.test`, `treasurer@rgci.test`, `secretary@rgci.test`, `usher@rgci.test`, `member@rgci.test`, and phone login `0241234567`. For the mock SMS API put `PROFJERO_API_KEY=pk_live_test` in `worker/.dev.vars`.
 
 | Suite | Command | Covers |
 |---|---|---|
 | Security rules | `npm run test:rules` (root) | 20 scenarios: role escalation, private giving, confidential care, prayer wall, RSVP counter integrity, QR check-in, audit log immutability, first-run lock |
 | App unit tests | `cd app && npm test` | Ghana phone normalisation, SMS page/unit maths, GSM-safe conversion, personalisation |
-| Worker tests | `cd worker && npm test` | Firebase token verification, role enforcement, ProfJero Connect proxying & validation, idempotency, Web Push (RFC 8291 test vector), VAPID, Cloudinary signing, birthday job |
-| End-to-end | `cd app && npx playwright test` | **450 responsive checks** (45 screens × 10 sizes, 320–1920 px: no overflow, no errors), user journeys (sign-up by phone, prayer → pastor reply, usher check-in, giving, first-timer follow-up, RSVP, access control, dark mode, SMS through the Worker), PWA install & offline (production build on port 4173) |
+| Worker tests | `cd worker && npm test` | Firebase token verification, role enforcement (incl. SMS billing), ProfJero Connect proxying & validation, idempotency, Web Push (RFC 8291 test vector), VAPID, Cloudinary signing, birthday & anniversary jobs, low-balance alerts |
+| End-to-end | `cd app && npx playwright test` | **480 responsive checks** (48 screens × 10 sizes, 320–1920 px: no overflow, no errors), user journeys (sign-up by phone, prayer → pastor reply, usher check-in, giving, first-timer follow-up, RSVP, access control, dark mode, SMS through the Worker, buying SMS units through checkout, scheduling & cancelling, Sender IDs, delivery log, treasurer billing access), PWA install & offline (production build on port 4173) |
 
 ---
 
 ## Security notes
 - Keep `PROFJERO_API_KEY`, `VAPID_PRIVATE_KEY`, `CLOUDINARY_API_SECRET` and `FIREBASE_SERVICE_ACCOUNT` as **Worker secrets** only. Never put them in `app/.env`.
-- The previous RGCI codebase (still in this repository’s git history) contained a VAPID private key and account identifiers in client code. CWC uses new keys generated by `npm run vapid`; if those old RGCI keys are still in use anywhere, rotate them.
+- The previous RGCI member app (`myrgci.pages.dev/pwa.js`) publishes its **VAPID private key** in client code, and the old push worker hard-codes it. This app uses new keys from `npm run vapid`, stored only as Worker secrets — retire `rgci-push-worker` once members have moved over.
 - Firestore rules are the source of truth for access. If you change roles in `app/src/lib/permissions.ts`, update `firestore.rules` and `worker/src/auth.ts` to match, and run the rules tests.
 
 ## Ghana-first details
@@ -191,4 +214,4 @@ Demo logins (emulator only, password `password123`): `admin@cwc.test`, `pastor@c
 
 ---
 
-<sub>Christian Worship Centre · crafted by **ProfJero** — Unveiling the Extraordinary.</sub>
+<sub>Restoration Grace Chapel International · crafted by **ProfJero** — Unveiling the Extraordinary.</sub>

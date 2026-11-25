@@ -41,7 +41,7 @@ export async function uploadToCloudinary(file: File, folder: UploadFolder, onPro
   let cloudName = config.cloudinaryCloudName;
   if (config.cloudinaryUploadPreset) {
     body.append('upload_preset', config.cloudinaryUploadPreset);
-    body.append('folder', `cwc/${folder}`);
+    body.append('folder', `rgci/${folder}`);
   } else {
     const sig = await api<Signature>('/v1/media/sign', { method: 'POST', json: { folder } });
     cloudName = sig.cloudName || cloudName;

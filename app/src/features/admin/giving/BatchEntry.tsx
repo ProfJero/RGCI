@@ -57,7 +57,7 @@ export function BatchEntry({ open, onOpenChange }: { open: boolean; onOpenChange
           memberName: r.who!.name,
           date,
           notes: 'Batch entry',
-          receiptNo: receiptNumber(church.shortName || 'CWC', new Date(date)),
+          receiptNo: receiptNumber(church.shortName || 'RGCI', new Date(date)),
           pledgeId: null,
           campaignId: null,
           recordedBy: actor?.uid,

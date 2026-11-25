@@ -13,7 +13,7 @@ import { MemberPage } from './ui';
 export default function PrayerWall() {
   const { data, loading } = usePrayerWall();
   const { data: testimonies } = usePublishedTestimonies();
-  const [prayed, setPrayed] = useLocalState<string[]>('cwc-prayed', []);
+  const [prayed, setPrayed] = useLocalState<string[]>('rgci-prayed', []);
   const open = data.filter((c) => c.status !== 'closed');
 
   async function pray(id: string) {

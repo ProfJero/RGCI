@@ -13,11 +13,15 @@ export const DEFAULT_SETTINGS: ChurchSettings = {
   eventCategories: ['Service', 'Conference', 'Crusade', 'Youth', 'Women', 'Men', 'Children', 'Prayer', 'Outreach', 'Fellowship', 'Other'],
   paymentAccounts: [],
   smsSenderId: '',
-  smsSignature: '- CWC',
-  welcomeSms: 'Dear {first_name|Beloved}, thank you for worshipping with us at Christian Worship Centre. We are glad you came and look forward to seeing you again. God bless you!',
-  birthdaySms: 'Happy birthday {first_name|Beloved}! Christian Worship Centre celebrates you today. May the Lord bless you and keep you. Num 6:24',
+  smsSignature: '- RGCI',
+  welcomeSms: 'Dear {first_name|Beloved}, thank you for worshipping with us at Restoration Grace Chapel. We are glad you came and hope to see you again. God bless you!',
+  birthdaySms: 'Happy birthday {first_name|Beloved}! Your RGCI family celebrates you today. May the Lord bless you and keep you. Num 6:24',
   autoBirthdaySms: false,
   autoWelcomeSms: false,
+  anniversarySms: 'Happy wedding anniversary {first_name|Beloved}! Your RGCI family rejoices with you. May God keep your home in love and peace.',
+  autoAnniversarySms: false,
+  smsLowBalanceUnits: 200,
+  smsLowBalanceAlert: true,
 };
 
 export function useChurch(): ChurchSettings & { loading: boolean } {

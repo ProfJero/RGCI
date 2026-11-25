@@ -1,13 +1,13 @@
 {
-  "name": "christian-worship-centre",
+  "name": "rgci-church-management",
   "private": true,
   "version": "1.0.0",
-  "description": "Christian Worship Centre — church management PWA. Crafted by ProfJero.",
+  "description": "Restoration Grace Chapel International — church management PWA. Crafted by ProfJero.",
   "author": "ProfJero",
   "scripts": {
-    "emulators": "firebase emulators:start --only auth,firestore --project demo-cwc",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-rgci",
     "seed": "node scripts/seed.mjs",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-cwc \"vitest run --root rules-tests\"",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-rgci \"vitest run --root rules-tests\"",
     "deploy:rules": "firebase deploy --only firestore",
     "deploy:hosting": "npm --prefix app run build && firebase deploy --only hosting"
   },

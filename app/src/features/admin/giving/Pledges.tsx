@@ -51,7 +51,7 @@ export function Pledges() {
 
   function remind() {
     const open = list.filter((p) => p.paid < p.amount && p.memberId);
-    sessionStorage.setItem('cwc-sms-pledges', JSON.stringify(open.map((p) => ({ memberId: p.memberId, balance: (p.amount - p.paid).toFixed(2), campaign: p.campaignName }))));
+    sessionStorage.setItem('rgci-sms-pledges', JSON.stringify(open.map((p) => ({ memberId: p.memberId, balance: (p.amount - p.paid).toFixed(2), campaign: p.campaignName }))));
     sessionStorage.setItem(SMS_SELECTION_KEY, JSON.stringify(open.map((p) => p.memberId)));
     navigate('/admin/messages?compose=1&audience=selection&label=Pledge%20balances&template=pledge');
   }

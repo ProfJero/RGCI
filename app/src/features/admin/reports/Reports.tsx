@@ -58,7 +58,7 @@ export default function Reports() {
   const catRows = [...groupBy(gifts, (g) => g.category).entries()].map(([label, v]) => ({ label, value: sum(v, (g) => g.amount) })).sort((a, b) => b.value - a.value);
 
   function exportAll() {
-    downloadCsv(`cwc-report-${year}.csv`, [
+    downloadCsv(`rgci-report-${year}.csv`, [
       ...statusRows.map((r) => ({ Section: 'Membership status', Item: r.label, Value: r.value })),
       ...ageRows.map((r) => ({ Section: 'Age band (active)', Item: r.label, Value: r.value })),
       ...groupRows.map((r) => ({ Section: 'Group size', Item: r.label, Value: r.value })),

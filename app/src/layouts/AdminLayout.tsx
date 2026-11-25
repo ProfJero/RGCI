@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
-import { Menu as MenuIcon, Search, MoreHorizontal, Smartphone, WifiOff, X } from 'lucide-react';
+import { Menu as MenuIcon, Search, MoreHorizontal, Smartphone, WifiOff, X, MessageSquareText } from 'lucide-react';
 import * as D from '@radix-ui/react-dialog';
 import { useAuth } from '@/lib/auth';
 import { useChurch } from '@/lib/settings';
 import { useOnline } from '@/lib/pwa';
 import { refreshPushSubscription } from '@/lib/push';
 import { useCareRequests } from '@/lib/queries';
+import { isLowBalance, useSmsBalance } from '@/lib/sms-balance';
+import { apiConfigured } from '@/lib/api';
+import { num } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { BrandLockup, Signature } from '@/components/brand';
 import { UserMenu } from '@/components/user-menu';
@@ -18,6 +21,30 @@ function useBadges() {
   const { can } = useAuth();
   const { data: care } = useCareRequests(can('care.view'));
   return { '/admin/care': care.filter((c) => c.status === 'new').length } as Record<string, number>;
+}
+
+/** Header chip: live ProfJero Connect balance for the people who manage SMS credit. */
+function SmsCreditsChip() {
+  const { can } = useAuth();
+  const church = useChurch();
+  const enabled = can('messaging.billing') && apiConfigured();
+  const bal = useSmsBalance(enabled);
+  if (!enabled || (bal.units == null && !bal.loading)) return null;
+  const low = isLowBalance(bal.units, bal.low, church.smsLowBalanceUnits);
+  return (
+    <NavLink
+      to="/admin/messages?tab=wallet"
+      title={low ? 'SMS balance is running low — buy units' : 'SMS units available'}
+      className={cn(
+        'flex h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors',
+        low ? 'border-warning/30 bg-warning-soft text-warning hover:brightness-95' : 'border-line bg-surface text-fg-2 hover:border-line-strong hover:text-fg',
+      )}
+    >
+      <MessageSquareText className="size-4" />
+      <span className="tabular" data-testid="header-sms-units">{bal.units == null ? '…' : num(bal.units)}</span>
+      <span className="hidden sm:inline">{low ? 'units · top up' : 'SMS units'}</span>
+    </NavLink>
+  );
 }
 
 function NavItemLink({ item, badge, onNavigate }: { item: NavItem; badge?: number; onNavigate?: () => void }) {
@@ -135,6 +162,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const online = useOnline();
   const { user } = useAuth();
+  const church = useChurch();
 
   useEffect(() => {
     setDrawer(false);
@@ -172,12 +200,13 @@ export default function AdminLayout() {
               <MenuIcon className="size-5" />
             </button>
             <div className="min-w-0 flex-1 lg:hidden">
-              <BrandLockup name="CWC Admin" className="[&>span:first-child]:size-8 [&>span:first-child>svg]:w-6" />
+              <BrandLockup name={church.shortName || 'RGCI'} sub="Admin" className="[&>span:first-child]:size-8 [&>span:first-child>svg]:w-6" />
             </div>
             <div className="hidden flex-1 lg:block" />
             <button type="button" onClick={showCommandPalette} className="grid size-10 place-items-center rounded-xl text-fg-2 hover:bg-surface-2 lg:hidden" aria-label="Search">
               <Search className="size-[18px]" />
             </button>
+            <SmsCreditsChip />
             <NotificationBell />
             <div className="lg:hidden">
               <UserMenu context="admin" />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 export type ThemePref = 'light' | 'dark' | 'system';
-const KEY = 'cwc-theme';
+const KEY = 'rgci-theme';
 
 function read(): ThemePref {
   try {
@@ -15,7 +15,7 @@ function apply(pref: ThemePref) {
   const dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.classList.toggle('dark', dark);
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
-    if (pref !== 'system') m.setAttribute('content', dark ? '#0b1020' : '#1e3a8a');
+    if (pref !== 'system') m.setAttribute('content', dark ? '#0c0a14' : '#4c229a');
   });
 }
 

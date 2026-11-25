@@ -164,7 +164,7 @@ export default function Import() {
   }
 
   function template() {
-    downloadCsv('cwc-people-template.csv', [
+    downloadCsv('rgci-people-template.csv', [
       { 'First name': 'Ama', 'Last name': 'Mensah', Phone: '0241234567', Email: 'ama@example.com', Gender: 'Female', 'Date of birth': '14/02/1990', Address: 'Adenta, Accra', 'GPS address': 'GD-123-4567', Occupation: 'Teacher', Status: 'Member', Groups: "Women's Fellowship; Voices of Worship (Choir)", 'Date joined': '01/03/2019' },
     ]);
   }

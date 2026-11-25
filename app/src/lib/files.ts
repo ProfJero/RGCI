@@ -40,9 +40,9 @@ export function icsFor(ev: { id: string; title: string; startAt: string; endAt?:
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//ProfJero//CWC//EN',
+    'PRODID:-//ProfJero//RGCI//EN',
     'BEGIN:VEVENT',
-    `UID:${ev.id}@cwc`,
+    `UID:${ev.id}@rgci`,
     `DTSTAMP:${stamp(new Date().toISOString())}`,
     `DTSTART:${stamp(ev.startAt)}`,
     `DTEND:${stamp(end)}`,

@@ -19,7 +19,7 @@ import type { Role, UserProfile } from './types';
  * Members may sign up with just a phone number. Those accounts use a synthetic
  * login email derived from the number; it is never shown or emailed.
  */
-export const PHONE_LOGIN_DOMAIN = 'phone.cwc.app';
+export const PHONE_LOGIN_DOMAIN = 'phone.rgci.app';
 
 export function loginEmailFor(identifier: string) {
   const v = identifier.trim();
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         },
         (err) => {
-          console.error('[cwc] profile load failed', err);
+          console.error('[rgci] profile load failed', err);
           setProfile(null);
           setLoading(false);
         },

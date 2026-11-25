@@ -79,6 +79,8 @@ export async function authenticate(req: Request, env: Env): Promise<Caller> {
 export const ROLES = {
   messaging: ['super_admin', 'admin', 'pastor', 'secretary'],
   smsSend: ['super_admin', 'admin', 'pastor', 'secretary', 'treasurer'], // treasurers send giving receipts
+  // buy units & see the wallet: messaging roles plus the treasurer, who pays for them
+  smsBilling: ['super_admin', 'admin', 'pastor', 'secretary', 'treasurer'],
   push: ['super_admin', 'admin', 'pastor', 'secretary'],
   admin: ['super_admin', 'admin'],
   staff: ['super_admin', 'admin', 'pastor', 'treasurer', 'secretary', 'staff', 'viewer'],

@@ -27,7 +27,9 @@ if (config.isConfigured) {
   auth = getAuth(app);
   // Persistent cache makes the app usable offline and keeps data costs low on mobile networks.
   db = initializeFirestore(app, {
-    localCache: supportsIndexedDb() && !config.useEmulators
+    // (The dev server against the emulators keeps a memory cache so re-seeding never shows stale data;
+    // production builds — including the emulator preview used by the offline tests — persist.)
+    localCache: supportsIndexedDb() && (!config.useEmulators || import.meta.env.PROD)
       ? persistentLocalCache({ tabManager: persistentMultipleTabManager() })
       : memoryLocalCache(),
     ignoreUndefinedProperties: true,

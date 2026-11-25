@@ -110,7 +110,8 @@ test('the treasurer only sees finance in the admin menu', async ({ browser }) =>
   const nav = page.getByRole('navigation', { name: 'Admin' });
   await expect(nav.getByRole('link', { name: 'Giving & finance' })).toBeVisible();
   await expect(nav.getByRole('link', { name: 'Pastoral care' })).toHaveCount(0);
-  await expect(nav.getByRole('link', { name: 'Messages' })).toHaveCount(0);
+  // Messages opens straight to SMS credits for the treasurer (they pay for units)
+  await expect(nav.getByRole('link', { name: 'Messages' })).toBeVisible();
 });
 
 test('dark mode applies across the app', async ({ browser }) => {
@@ -119,7 +120,7 @@ test('dark mode applies across the app', async ({ browser }) => {
   await page.goto('/admin');
   await expect(page.locator('html')).toHaveClass(/dark/);
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe('rgb(10, 13, 22)');
+  expect(bg).toBe('rgb(12, 10, 20)');
 });
 
 test('SMS through the Worker reaches ProfJero Connect', async ({ browser, request }) => {
@@ -129,10 +130,97 @@ test('SMS through the Worker reaches ProfJero Connect', async ({ browser, reques
   await page.goto('/admin/messages?compose=1');
   await page.getByLabel('Audience').selectOption('manual');
   await page.getByLabel('Phone numbers').fill('0241234567, 0551234567');
-  await page.getByLabel('Message').fill('Hello from the CWC test suite');
+  await page.getByLabel('Message').fill('Hello from the RGCI test suite');
   await page.getByRole('button', { name: 'Check cost' }).click();
   await expect(page.getByText(/2 units · balance/)).toBeVisible();
   await page.getByRole('button', { name: 'Send to 2' }).click();
   await page.getByRole('button', { name: 'Send now' }).click();
   await expect(page.getByText('Sending to 2 people')).toBeVisible();
+});
+
+const workerUp = async (request: import('@playwright/test').APIRequestContext) => (await request.get('http://127.0.0.1:8787/v1/health').catch(() => null))?.ok();
+
+test('admin buys SMS units through ProfJero checkout and the wallet is credited', async ({ browser, request }) => {
+  test.skip(!(await workerUp(request)), 'Worker not running locally');
+  const page = await (await as(browser, 'admin', { width: 1280, height: 900 })).newPage();
+  await page.goto('/admin/messages?tab=wallet');
+  const before = Number((await page.getByTestId('sms-units').innerText()).replace(/\D/g, ''));
+  await page.getByRole('radio', { name: /Ministry/ }).click();
+  await expect(page.getByText('Best value')).toBeVisible();
+  await page.getByRole('radio', { name: /Debit or credit card/ }).click();
+  await expect(page.getByText('GH₵ 340.00').last()).toBeVisible();
+  await page.getByRole('button', { name: 'Continue to secure checkout' }).click();
+  // the mock checkout returns straight to the app with the payment reference
+  await expect(page.getByText('Payment received — 10,000 units added')).toBeVisible();
+  await expect(page.getByText('Paid').first()).toBeVisible();
+  await expect.poll(async () => Number((await page.getByTestId('sms-units').innerText()).replace(/\D/g, ''))).toBeGreaterThan(before + 9000); // other tests may spend a few units from the shared mock wallet meanwhile
+  await expect(page.getByTestId('header-sms-units')).not.toHaveText('…');
+});
+
+test('a custom unit amount is priced before checkout', async ({ browser, request }) => {
+  test.skip(!(await workerUp(request)), 'Worker not running locally');
+  const page = await (await as(browser, 'secretary', { width: 1280, height: 900 })).newPage();
+  await page.goto('/admin/messages?tab=wallet');
+  await page.getByRole('radio', { name: /Custom amount/ }).click();
+  await page.getByRole('button', { name: '2,500' }).click();
+  await expect(page.getByText('≈ GH₵ 100.00')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue to secure checkout' })).toBeEnabled();
+});
+
+test('treasurer can buy SMS units but cannot send or read message logs', async ({ browser, request }) => {
+  test.skip(!(await workerUp(request)), 'Worker not running locally');
+  const page = await (await as(browser, 'treasurer', { width: 1280, height: 900 })).newPage();
+  await page.goto('/admin/messages');
+  await expect(page.getByText('SMS units available')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue to secure checkout' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'New SMS' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'History' })).toHaveCount(0);
+});
+
+test('a scheduled SMS shows under Scheduled and can be cancelled', async ({ browser, request }) => {
+  test.skip(!(await workerUp(request)), 'Worker not running locally');
+  const text = `Vigil reminder ${stamp()}`;
+  const page = await (await as(browser, 'pastor', { width: 1280, height: 900 })).newPage();
+  await page.goto('/admin/messages');
+  await page.getByLabel('Audience').selectOption('manual');
+  await page.getByLabel('Phone numbers').fill('0241234567');
+  await page.getByLabel('Message').fill(text);
+  await page.getByText('Schedule for later').click();
+  const at = new Date(Date.now() + 3 * 86400e3);
+  await page.getByLabel('Send at').fill(at.toISOString().slice(0, 11) + '18:00');
+  await page.getByRole('button', { name: 'Schedule to 1' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Schedule' }).click();
+  await expect(page.getByText(/^Scheduled for/)).toBeVisible();
+  await page.getByRole('tab', { name: 'Scheduled' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: text });
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('button', { name: 'Cancel send' }).click();
+  await expect(page.getByText('Scheduled send cancelled')).toBeVisible();
+  await expect(row.getByText('cancelled')).toBeVisible();
+});
+
+test('sender IDs show approval status and the church default', async ({ browser, request }) => {
+  test.skip(!(await workerUp(request)), 'Worker not running locally');
+  const page = await (await as(browser, 'admin', { width: 1280, height: 900 })).newPage();
+  await page.goto('/admin/messages?tab=senders');
+  await expect(page.getByText('Awaiting approval')).toBeVisible();
+  await expect(page.getByText('Approved', { exact: true })).toBeVisible();
+});
+
+test('the delivery log lists sends on the ProfJero account', async ({ browser, request }) => {
+  test.skip(!(await workerUp(request)), 'Worker not running locally');
+  const text = `Log check ${stamp()}`;
+  const page = await (await as(browser, 'secretary', { width: 1280, height: 900 })).newPage();
+  await page.goto('/admin/messages');
+  await page.getByLabel('Audience').selectOption('manual');
+  await page.getByLabel('Phone numbers').fill('0201234567');
+  await page.getByLabel('Message').fill(text);
+  await page.getByRole('button', { name: 'Send to 1' }).click();
+  await page.getByRole('button', { name: 'Send now' }).click();
+  await expect(page.getByText('Sending to 1 person')).toBeVisible();
+  await page.getByRole('tab', { name: 'History' }).click();
+  await page.getByRole('radio', { name: 'Delivery log' }).click();
+  await page.getByRole('cell', { name: new RegExp(text) }).first().click();
+  await expect(page.getByRole('dialog').getByText('delivered').first()).toBeVisible();
 });

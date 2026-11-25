@@ -126,7 +126,7 @@ function resilient(listen: (onError: (e: Error) => void) => () => void, set: (s:
         timer = setTimeout(start, RETRY_DELAYS[attempt++]);
         return;
       }
-      console.error('[cwc] listener failed', label, error);
+      console.error('[rgci] listener failed', label, error);
       set({ data: empty, loading: false, error });
     });
   };
@@ -256,7 +256,7 @@ export async function audit(action: string, entity: string, entityId: string | u
       at: serverTimestamp(),
     });
   } catch (e) {
-    console.warn('[cwc] audit failed', e);
+    console.warn('[rgci] audit failed', e);
   }
 }
 

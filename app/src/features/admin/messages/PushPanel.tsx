@@ -22,7 +22,7 @@ export async function broadcast(n: { title: string; body: string; url?: string; 
     await patchDoc('notifications', id, { push: { sent: res.sent, failed: res.failed } });
     return { id, push: res };
   } catch (e) {
-    console.warn('[cwc] push failed', e);
+    console.warn('[rgci] push failed', e);
     return { id, push: null };
   }
 }

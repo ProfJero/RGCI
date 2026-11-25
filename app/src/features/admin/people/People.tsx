@@ -34,7 +34,7 @@ const FILTERS: Record<Filter, (m: Member) => boolean> = {
 };
 
 /** Hand-off of selected people to the SMS composer. */
-export const SMS_SELECTION_KEY = 'cwc-sms-selection';
+export const SMS_SELECTION_KEY = 'rgci-sms-selection';
 
 export default function People() {
   const { can } = useAuth();
@@ -43,7 +43,7 @@ export default function People() {
   const { data: members, loading } = useMembers();
   const { data: groups } = useGroups();
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useLocalState<Filter>('cwc-people-filter', 'all');
+  const [filter, setFilter] = useLocalState<Filter>('rgci-people-filter', 'all');
   const [groupId, setGroupId] = useState('');
   const [gender, setGender] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -117,7 +117,7 @@ export default function People() {
 
   function exportRows(list: Member[]) {
     downloadCsv(
-      `cwc-people-${fmtDate(new Date(), 'yyyy-MM-dd')}.csv`,
+      `rgci-people-${fmtDate(new Date(), 'yyyy-MM-dd')}.csv`,
       list.map((m) => ({
         'First name': m.firstName,
         'Last name': m.lastName,

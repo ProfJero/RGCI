@@ -45,6 +45,6 @@ export function useLocalState<T>(key: string, initial: T) {
 
 export function useDocumentTitle(title: string) {
   useEffect(() => {
-    document.title = title ? `${title} · CWC` : 'Christian Worship Centre';
+    document.title = title ? `${title} · RGCI` : 'Restoration Grace Chapel International';
   }, [title]);
 }

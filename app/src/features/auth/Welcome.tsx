@@ -1,6 +1,6 @@
 import { BookOpen, CalendarDays, HandHeart, HeartHandshake, MapPin, Clock, Download, Bell } from 'lucide-react';
 import { ButtonLink, Button } from '@/components/ui/button';
-import { CwcLogo, Signature } from '@/components/brand';
+import { ChurchLogo, Signature } from '@/components/brand';
 import { useChurch } from '@/lib/settings';
 import { useDocumentTitle } from '@/lib/hooks';
 import { useInstallPrompt } from '@/lib/pwa';
@@ -24,7 +24,7 @@ export default function Welcome() {
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-8">
         <span className="flex min-w-0 items-center gap-2.5">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-800 text-white">
-            <CwcLogo className="w-7" weight={22} />
+            <ChurchLogo className="w-7" weight={22} />
           </span>
           <span className="truncate text-[15px] font-semibold tracking-tight">{church.name}</span>
         </span>
@@ -34,7 +34,7 @@ export default function Welcome() {
       </header>
 
       <section className="relative mx-auto max-w-6xl overflow-hidden px-5 pb-12 pt-14 sm:px-8 sm:pt-20 lg:pb-20">
-        <CwcLogo className="pointer-events-none absolute -right-20 top-6 hidden w-[560px] text-brand-800/[0.05] md:block dark:text-brand-300/[0.06]" />
+        <ChurchLogo className="pointer-events-none absolute -right-16 top-10 hidden w-[400px] text-brand-800/[0.05] md:block dark:text-brand-300/[0.06]" />
         <div className="relative max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-fg-2">
             <span className="size-1.5 rounded-full bg-gold-500" />

@@ -21,7 +21,7 @@ const db = (id?: string) => (id ? env.authenticatedContext(id).firestore() : env
 
 beforeAll(async () => {
   env = await initializeTestEnvironment({
-    projectId: 'demo-cwc-rules',
+    projectId: 'demo-rgci-rules',
     firestore: { rules: readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8'), host: '127.0.0.1', port: 8080 },
   });
 });

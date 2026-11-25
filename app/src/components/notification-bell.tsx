@@ -12,7 +12,7 @@ import { EmptyState } from './ui/feedback';
 export function useUnreadNotifications() {
   const { user } = useAuth();
   const { data } = useNotificationsFeed(user?.uid);
-  const [seenAt, setSeenAt] = useLocalState<number>(`cwc-notif-seen-${user?.uid ?? 'anon'}`, 0);
+  const [seenAt, setSeenAt] = useLocalState<number>(`rgci-notif-seen-${user?.uid ?? 'anon'}`, 0);
   const unread = useMemo(() => data.filter((n) => (toDate(n.createdAt)?.getTime() ?? 0) > seenAt).length, [data, seenAt]);
   return { items: data, unread, markSeen: () => setSeenAt(Date.now()), seenAt };
 }

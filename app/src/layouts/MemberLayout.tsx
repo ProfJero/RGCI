@@ -7,7 +7,7 @@ import { useInstallPrompt, useOnline } from '@/lib/pwa';
 import { useLocalState } from '@/lib/hooks';
 import { refreshPushSubscription } from '@/lib/push';
 import { cn } from '@/lib/utils';
-import { CwcLogo, Signature } from '@/components/brand';
+import { ChurchLogo, Signature } from '@/components/brand';
 import { NotificationBell } from '@/components/notification-bell';
 import { UserMenu } from '@/components/user-menu';
 import { ButtonLink, Button } from '@/components/ui/button';
@@ -15,16 +15,16 @@ import { MEMBER_EXTRA, MEMBER_NAV } from './nav';
 
 function InstallBanner() {
   const install = useInstallPrompt();
-  const [dismissed, setDismissed] = useLocalState('cwc-install-dismissed', 0);
+  const [dismissed, setDismissed] = useLocalState('rgci-install-dismissed', 0);
   const recentlyDismissed = Date.now() - dismissed < 1000 * 60 * 60 * 24 * 14;
   if (install.installed || recentlyDismissed || (!install.canInstall && !install.iosHint)) return null;
   return (
     <div className="mx-auto mb-4 flex max-w-5xl items-center gap-3 rounded-2xl border border-brand-200/70 bg-accent-soft px-4 py-3 text-sm dark:border-brand-500/20">
       <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-800 text-white">
-        <CwcLogo className="w-6" weight={24} />
+        <ChurchLogo className="w-6" weight={24} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-accent-soft-fg">Install the CWC app</p>
+        <p className="font-semibold text-accent-soft-fg">Install the RGCI app</p>
         <p className="text-[13px] text-fg-2">
           {install.canInstall ? 'Faster, works offline, and gets notifications.' : 'Tap Share, then “Add to Home Screen”.'}
         </p>
@@ -60,7 +60,7 @@ export default function MemberLayout() {
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-4 sm:h-16 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center gap-2.5">
             <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-800 text-white">
-              <CwcLogo className="w-6" weight={24} />
+              <ChurchLogo className="w-6" weight={24} />
             </span>
             <span className="truncate text-[15px] font-semibold tracking-tight">
               <span className="sm:hidden">{church.shortName}</span>

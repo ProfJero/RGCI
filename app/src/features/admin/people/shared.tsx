@@ -21,7 +21,7 @@ export const REGIONS = [
   'North East', 'Upper East', 'Upper West', 'Bono', 'Bono East', 'Ahafo', 'Oti', 'Outside Ghana',
 ];
 
-export type MemberInput = Omit<Member, 'id' | 'fullName' | 'keywords' | 'birthMonthDay' | 'createdAt' | 'updatedAt' | 'createdBy'>;
+export type MemberInput = Omit<Member, 'id' | 'fullName' | 'keywords' | 'birthMonthDay' | 'anniversaryMonthDay' | 'createdAt' | 'updatedAt' | 'createdBy'>;
 
 export const EMPTY_MEMBER: MemberInput = {
   firstName: '', lastName: '', otherNames: '', title: '', gender: '', dob: '', phone: '', altPhone: '', email: '',
@@ -47,6 +47,7 @@ export function memberPayload(m: Partial<MemberInput>) {
     emergencyPhone: normalizePhone(m.emergencyPhone),
     email: (m.email ?? '').trim().toLowerCase(),
     birthMonthDay: monthDay(m.dob) ?? '',
+    anniversaryMonthDay: m.maritalStatus === 'married' ? (monthDay(m.anniversary) ?? '') : '',
     keywords: searchKeywords(fullName, phone.slice(-9), phone.slice(-9).replace(/^(\d{2})/, '0$1'), m.email),
   };
 }
@@ -75,7 +76,7 @@ export function PersonForm({
     if (!open) return;
     setErrors({});
     if (member) {
-      const { id: _id, fullName: _f, keywords: _k, birthMonthDay: _b, createdAt: _c, updatedAt: _u, createdBy: _cb, ...rest } = member;
+      const { id: _id, fullName: _f, keywords: _k, birthMonthDay: _b, anniversaryMonthDay: _a, createdAt: _c, updatedAt: _u, createdBy: _cb, ...rest } = member;
       setForm({ ...EMPTY_MEMBER, ...rest, phone: member.phone ? '0' + member.phone.slice(3) : '' });
     } else setForm({ ...EMPTY_MEMBER, ...defaults });
   }, [open, member, defaults]);

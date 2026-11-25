@@ -13,7 +13,7 @@ test.describe('PWA (production build)', () => {
     const html = await (await request.get(PREVIEW)).text();
     expect(html).toContain('rel="manifest"');
     const m = await (await request.get(`${PREVIEW}/manifest.webmanifest`)).json();
-    expect(m).toMatchObject({ name: 'Christian Worship Centre', short_name: 'CWC', display: 'standalone', start_url: '/?source=pwa', theme_color: '#1e3a8a' });
+    expect(m).toMatchObject({ name: 'Restoration Grace Chapel International', short_name: 'RGCI', display: 'standalone', start_url: '/?source=pwa', theme_color: '#4c229a' });
     const sizes = m.icons.map((i: { sizes: string; purpose: string }) => `${i.sizes}:${i.purpose}`);
     expect(sizes).toEqual(expect.arrayContaining(['192x192:any', '512x512:any', '512x512:maskable']));
     for (const icon of m.icons) expect((await request.get(PREVIEW + icon.src)).ok()).toBe(true);
@@ -26,7 +26,7 @@ test.describe('PWA (production build)', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(PREVIEW + '/login');
-    await page.locator('input[name=username]').fill('member@cwc.test');
+    await page.locator('input[name=username]').fill('member@rgci.test');
     await page.locator('input[name=password]').fill('password123');
     await page.getByRole('button', { name: 'Sign in' }).click();
     await page.waitForURL((u) => !u.pathname.startsWith('/login'));
@@ -42,7 +42,7 @@ test.describe('PWA (production build)', () => {
     }
     await ctx.setOffline(true);
     await page.goto(PREVIEW + '/give');
-    await expect(page.getByRole('heading', { name: 'Give' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Give', level: 1 })).toBeVisible();
     await expect(page.getByText(/Offline/)).toBeVisible();
     await page.goto(PREVIEW + '/');
     await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();

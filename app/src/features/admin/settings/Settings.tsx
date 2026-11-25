@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Switch, Textarea, TextField } from '@/components/ui/input';
 import { Banner } from '@/components/ui/feedback';
 import { Badge } from '@/components/ui/badge';
-import { ProfJeroMark, CwcLogo } from '@/components/brand';
+import { ProfJeroMark, ChurchLogo } from '@/components/brand';
 
 export default function Settings() {
   const church = useChurch();
@@ -99,19 +99,43 @@ export default function Settings() {
           <div className="space-y-4 px-5 pb-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField label="Default Sender ID" {...bind('smsSenderId')} maxLength={11} hint="Must be approved in your ProfJero Connect account (max 11 characters)." />
-              <TextField label="Signature" {...bind('smsSignature')} hint="Appended to messages, e.g. “- CWC”" />
+              <TextField label="Signature" {...bind('smsSignature')} hint="Appended to messages, e.g. “- RGCI”" />
             </div>
             <Field label="First-timer welcome SMS" hint={`${segmentInfo(s.welcomeSms ?? '').pages} page(s). Use {first_name|Beloved}.`}><Textarea rows={3} {...bind('welcomeSms')} /></Field>
             <Switch checked={!!s.autoWelcomeSms} onCheckedChange={(v) => set('autoWelcomeSms', v)} label="Offer to send the welcome SMS when a first-timer is added" />
             <Field label="Birthday SMS" hint={`${segmentInfo(s.birthdaySms ?? '').pages} page(s).`}><Textarea rows={3} {...bind('birthdaySms')} /></Field>
-            <Switch checked={!!s.autoBirthdaySms} onCheckedChange={(v) => set('autoBirthdaySms', v)} label="Send birthday SMS automatically every morning" description="Runs at 7:00 AM from the CWC Worker (requires its Firebase service account — see README)." />
+            <Switch checked={!!s.autoBirthdaySms} onCheckedChange={(v) => set('autoBirthdaySms', v)} label="Send birthday SMS automatically every morning" description="Runs at 7:00 AM from the RGCI Worker (requires its Firebase service account — see README)." />
+            <Field label="Wedding anniversary SMS" hint={`${segmentInfo(s.anniversarySms ?? '').pages} page(s). Sent to married members on their anniversary date.`}><Textarea rows={3} {...bind('anniversarySms')} /></Field>
+            <Switch checked={!!s.autoAnniversarySms} onCheckedChange={(v) => set('autoAnniversarySms', v)} label="Send anniversary SMS automatically every morning" />
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="SMS balance alerts" description="Get warned before the ProfJero Connect wallet runs dry." />
+          <div className="space-y-4 px-5 pb-5">
+            <Switch
+              checked={s.smsLowBalanceAlert !== false}
+              onCheckedChange={(v) => set('smsLowBalanceAlert', v)}
+              label="Notify admins, pastors, secretaries and the treasurer when units run low"
+              description="Checked every morning; sends an in-app notification and a push to their devices."
+            />
+            <TextField
+              label="Alert when units fall to"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              value={s.smsLowBalanceUnits == null ? '' : String(s.smsLowBalanceUnits)}
+              onChange={(e) => set('smsLowBalanceUnits', e.target.value === '' ? null : Math.max(0, Math.round(Number(e.target.value))))}
+              hint="Leave empty to use ProfJero Connect’s own low-balance level."
+              className="sm:max-w-xs"
+            />
           </div>
         </Card>
 
         <Integrations />
 
         <Card className="flex flex-col items-center gap-3 p-6 text-center sm:flex-row sm:text-left">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-800 text-white"><CwcLogo className="w-9" weight={18} /></span>
+          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-800 text-white"><ChurchLogo className="w-9" weight={18} /></span>
           <div className="min-w-0 flex-1">
             <p className="font-semibold">{church.name} · v{__APP_VERSION__}</p>
             <p className="mt-0.5 flex items-center justify-center gap-1.5 text-sm text-fg-3 sm:justify-start">
@@ -214,7 +238,7 @@ function Integrations() {
       <CardHeader title="Integrations" description="Connection status of the services behind the app." />
       <ul className="divide-y divide-line border-t border-line">
         <Row label="Firebase (database & sign-in)" ok detail={config.useEmulators ? 'Local emulators' : firebaseConfig.projectId ?? ''} />
-        <Row label="CWC API (Cloudflare Worker)" ok={health ? health.ok : undefined} detail={health?.ok ? 'Online' : health?.error ?? 'Checking…'} />
+        <Row label="RGCI API (Cloudflare Worker)" ok={health ? health.ok : undefined} detail={health?.ok ? 'Online' : health?.error ?? 'Checking…'} />
         <Row label="ProfJero Connect SMS" ok={health ? !!health.sms : undefined} detail={health?.sms ? 'API key set' : 'Add PROFJERO_API_KEY to the Worker'} />
         <Row label="Push notifications" ok={health ? !!health.push : undefined} detail={health?.push ? 'VAPID keys set' : 'Add VAPID keys to the Worker'} />
         <Row label="Cloudinary uploads" ok={cloudinaryConfigured() && (!!config.cloudinaryUploadPreset || !!health?.media)} detail={config.cloudinaryCloudName || 'Set VITE_CLOUDINARY_CLOUD_NAME'} />

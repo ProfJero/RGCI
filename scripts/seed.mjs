@@ -6,7 +6,7 @@ import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 
 process.env.FIRESTORE_EMULATOR_HOST ||= '127.0.0.1:8080';
 process.env.FIREBASE_AUTH_EMULATOR_HOST ||= '127.0.0.1:9099';
-const projectId = process.env.SEED_PROJECT || 'demo-cwc';
+const projectId = process.env.SEED_PROJECT || 'demo-rgci';
 if (!projectId.startsWith('demo-')) throw new Error('Seeding is only allowed against demo-* emulator projects.');
 
 initializeApp({ projectId });
@@ -63,21 +63,21 @@ async function main() {
   // ---- settings
   W.push([db.doc('settings/bootstrap'), { by: 'seed', at: FieldValue.serverTimestamp() }]);
   W.push([db.doc('settings/church'), {
-    name: 'Christian Worship Centre', shortName: 'CWC', tagline: 'Worship • Word • World',
-    address: 'Off Adenta–Dodowa Road, Adenta, Accra', gpsAddress: 'GD-123-4567', phone: '233302123456', email: 'info@cwc.example',
+    name: 'Restoration Grace Chapel International', shortName: 'RGCI', tagline: 'Restoring lives by grace',
+    address: 'Off Adenta–Dodowa Road, Adenta, Accra', gpsAddress: 'GD-123-4567', phone: '233302123456', email: 'info@rgci.example',
     serviceTimes: 'Sundays 7:30 AM & 10:00 AM • Wednesdays 6:30 PM',
     serviceTypes: ['Sunday First Service', 'Sunday Second Service', 'Midweek Service', 'Prayer Meeting', 'Youth Service', 'Special Service'],
     givingCategories: ['Tithe', 'Offering', 'Thanksgiving', 'Seed', 'Building Fund', 'Welfare', 'Missions', 'Pledge Redemption', 'Harvest', 'Other'],
     expenseCategories: ['Utilities', 'Rent', 'Salaries & Allowances', 'Maintenance', 'Outreach & Missions', 'Welfare Support', 'Equipment', 'Transport', 'Hospitality', 'Office & Admin', 'Other'],
     eventCategories: ['Service', 'Conference', 'Crusade', 'Youth', 'Women', 'Men', 'Children', 'Prayer', 'Outreach', 'Fellowship', 'Other'],
     paymentAccounts: [
-      { label: 'MTN Mobile Money', kind: 'momo', name: 'Christian Worship Centre', number: '0244000111', extra: 'Merchant ID 445566 • Dial *170#' },
-      { label: 'Telecel Cash', kind: 'momo', name: 'Christian Worship Centre', number: '0204000222' },
-      { label: 'GCB Bank', kind: 'bank', name: 'Christian Worship Centre', number: '1011130045678', extra: 'Adenta Branch' },
+      { label: 'MTN Mobile Money', kind: 'momo', name: 'Restoration Grace Chapel International', number: '0244000111', extra: 'Merchant ID 445566 • Dial *170#' },
+      { label: 'Telecel Cash', kind: 'momo', name: 'Restoration Grace Chapel International', number: '0204000222' },
+      { label: 'GCB Bank', kind: 'bank', name: 'Restoration Grace Chapel International', number: '1011130045678', extra: 'Adenta Branch' },
     ],
-    smsSenderId: 'CWC', smsSignature: '- CWC',
-    welcomeSms: 'Dear {first_name|Beloved}, thank you for worshipping with us at Christian Worship Centre. We are glad you came and look forward to seeing you again. God bless you!',
-    birthdaySms: 'Happy birthday {first_name|Beloved}! Christian Worship Centre celebrates you today. May the Lord bless you and keep you. Num 6:24',
+    smsSenderId: 'RGCI', smsSignature: '- RGCI',
+    welcomeSms: 'Dear {first_name|Beloved}, thank you for worshipping with us at Restoration Grace Chapel. We are glad you came and hope to see you again. God bless you!',
+    birthdaySms: 'Happy birthday {first_name|Beloved}! Your RGCI family celebrates you today. May the Lord bless you and keep you. Num 6:24',
     autoBirthdaySms: false, autoWelcomeSms: false,
   }]);
 
@@ -118,6 +118,12 @@ async function main() {
       smsOptOut: false, keywords: [],
       createdAt: ts(joined), updatedAt: ts(joined),
     };
+    if (m.maritalStatus === 'married') {
+      const wed = new Date(Math.min(dob.getFullYear() + int(24, 32), new Date().getFullYear() - 1), int(0, 11), int(1, 28));
+      if (i % 17 === 9) { wed.setMonth(new Date().getMonth()); wed.setDate(new Date().getDate() + (i % 5)); } // a few anniversaries this week
+      m.anniversary = iso(wed);
+      m.anniversaryMonthDay = `${pad(wed.getMonth() + 1)}-${pad(wed.getDate())}`;
+    }
     m.keywords = keywords(m.fullName, m.phone.slice(-9), m.email);
     members.push(m);
   }
@@ -132,7 +138,7 @@ async function main() {
     const inGroup = members.filter((m) => m.groupIds.includes(groupIds[i]));
     const leader = inGroup[0];
     W.push([db.doc(`groups/${groupIds[i]}`), {
-      name, type, description: `${name} of Christian Worship Centre.`, leaderIds: leader ? [leader.id] : [], leaderNames: leader ? [leader.fullName] : [],
+      name, type, description: `${name} of Restoration Grace Chapel International.`, leaderIds: leader ? [leader.id] : [], leaderNames: leader ? [leader.fullName] : [],
       meetingDay: day, meetingTime: time, location: type === 'cell' ? name.replace(' Home Cell', '') : 'Church auditorium', memberCount: inGroup.length, createdAt: FieldValue.serverTimestamp(),
     }]);
   });
@@ -140,21 +146,21 @@ async function main() {
 
   // ---- auth users for each role (emulator only; password: password123)
   const staffAccounts = [
-    ['admin@cwc.test', 'Rev. Daniel Asante', 'super_admin'],
-    ['office@cwc.test', 'Grace Owusu', 'admin'],
-    ['pastor@cwc.test', 'Pastor Samuel Boateng', 'pastor'],
-    ['treasurer@cwc.test', 'Comfort Agyeman', 'treasurer'],
-    ['secretary@cwc.test', 'Linda Tetteh', 'secretary'],
-    ['usher@cwc.test', 'Kojo Appiah', 'staff'],
+    ['admin@rgci.test', 'Rev. Daniel Asante', 'super_admin'],
+    ['office@rgci.test', 'Grace Owusu', 'admin'],
+    ['pastor@rgci.test', 'Pastor Samuel Boateng', 'pastor'],
+    ['treasurer@rgci.test', 'Comfort Agyeman', 'treasurer'],
+    ['secretary@rgci.test', 'Linda Tetteh', 'secretary'],
+    ['usher@rgci.test', 'Kojo Appiah', 'staff'],
   ];
-  const memberAccounts = [['member@cwc.test', members[7]], ['0241234567', members[8]]];
+  const memberAccounts = [['member@rgci.test', members[7]], ['0241234567', members[8]]];
   const userDocs = [];
   for (const [email, name, role] of staffAccounts) {
     const u = await upsertAuth(email, name);
     userDocs.push([u.uid, { uid: u.uid, email, fullName: name, phone: `2332${int(40000000, 59999999)}`, role, isActive: true, memberId: null, createdAt: FieldValue.serverTimestamp() }]);
   }
   for (const [login, m] of memberAccounts) {
-    const email = login.includes('@') ? login : `233${login.slice(1)}@phone.cwc.app`;
+    const email = login.includes('@') ? login : `233${login.slice(1)}@phone.rgci.app`;
     const u = await upsertAuth(email, m.fullName);
     m.uid = u.uid;
     W.push([db.doc(`members/${m.id}`), (({ id, ...d }) => ({ ...d, uid: u.uid }))(m)]);
@@ -195,12 +201,12 @@ async function main() {
     for (const m of givers) {
       if (rand() < 0.45) {
         receipt++;
-        W.push([db.collection('gifts').doc(), { category: rand() < 0.75 ? 'Tithe' : pick(['Thanksgiving', 'Seed', 'Building Fund', 'Welfare']), amount: pick([20, 50, 50, 100, 100, 150, 200, 250, 300, 500, 1000]), method: pick(['cash', 'momo', 'momo', 'momo', 'bank']), memberId: m.id, memberName: m.fullName, date: iso(day), receiptNo: `CWC-${iso(day).slice(2, 7).replace('-', '')}-${receipt}`, reference: '', recordedByName: 'Comfort Agyeman', createdAt: ts(day) }]);
+        W.push([db.collection('gifts').doc(), { category: rand() < 0.75 ? 'Tithe' : pick(['Thanksgiving', 'Seed', 'Building Fund', 'Welfare']), amount: pick([20, 50, 50, 100, 100, 150, 200, 250, 300, 500, 1000]), method: pick(['cash', 'momo', 'momo', 'momo', 'bank']), memberId: m.id, memberName: m.fullName, date: iso(day), receiptNo: `RGCI-${iso(day).slice(2, 7).replace('-', '')}-${receipt}`, reference: '', recordedByName: 'Comfort Agyeman', createdAt: ts(day) }]);
       }
     }
     for (const cat of ['Offering', 'Offering', 'Missions']) {
       receipt++;
-      W.push([db.collection('gifts').doc(), { category: cat, amount: int(800, 4200), method: 'cash', memberId: null, memberName: cat === 'Offering' ? 'Sunday offering (loose)' : 'Missions offering', date: iso(day), receiptNo: `CWC-${iso(day).slice(2, 7).replace('-', '')}-${receipt}`, recordedByName: 'Comfort Agyeman', createdAt: ts(day) }]);
+      W.push([db.collection('gifts').doc(), { category: cat, amount: int(800, 4200), method: 'cash', memberId: null, memberName: cat === 'Offering' ? 'Sunday offering (loose)' : 'Missions offering', date: iso(day), receiptNo: `RGCI-${iso(day).slice(2, 7).replace('-', '')}-${receipt}`, recordedByName: 'Comfort Agyeman', createdAt: ts(day) }]);
     }
   }
   const expenseCats = [['Utilities', 900, 1800], ['Rent', 4500, 4500], ['Salaries & Allowances', 6000, 9000], ['Maintenance', 300, 2500], ['Outreach & Missions', 500, 3000], ['Welfare Support', 400, 2000], ['Hospitality', 200, 900], ['Transport', 150, 700]];
@@ -234,7 +240,7 @@ async function main() {
     const start = daysAgo(-inDays); start.setHours(i % 2 ? 18 : 9, 0, 0, 0);
     const end = new Date(start.getTime() + 3 * 3600e3);
     const local = (d) => `${iso(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    W.push([db.doc(`events/evt-${i + 1}`), { title, category, description, startAt: local(start), endAt: local(end), location: 'CWC Auditorium, Adenta', imageUrl: '', status: published ? 'published' : 'draft', rsvpEnabled: true, capacity: i === 4 ? 80 : null, rsvpCount: int(3, 60), createdAt: ts(daysAgo(20)) }]);
+    W.push([db.doc(`events/evt-${i + 1}`), { title, category, description, startAt: local(start), endAt: local(end), location: 'RGCI Auditorium, Adenta', imageUrl: '', status: published ? 'published' : 'draft', rsvpEnabled: true, capacity: i === 4 ? 80 : null, rsvpCount: int(3, 60), createdAt: ts(daysAgo(20)) }]);
   });
 
   // ---- devotionals
@@ -294,15 +300,15 @@ async function main() {
   });
 
   // ---- messaging
-  [['Sunday reminder', 'Hello {first_name|Beloved}, join us this Sunday at 7:30am or 10am at Christian Worship Centre. Come expecting! - CWC', 'Reminder'], ['Birthday wishes', 'Happy birthday {first_name|Beloved}! CWC celebrates you. May this new year bring you favour and fulfilment. Num 6:24 - CWC', 'Birthday'], ['First timer welcome', 'Dear {first_name|Beloved}, thank you for worshipping with us at CWC. We are glad you came and look forward to seeing you again!', 'Welcome'], ['Absentee check-in', 'Hi {first_name|Beloved}, we missed you at church recently. We are praying for you and hope to see you soon. - CWC', 'Follow-up']].forEach(([name, body, category]) => W.push([db.collection('sms_templates').doc(), { name, body, category, createdAt: FieldValue.serverTimestamp() }]));
-  W.push([db.doc('sms_messages/seed-sms-1'), { senderId: 'CWC', message: 'Hello {first_name|Beloved}, join us this Sunday at 7:30am or 10am. Come expecting! - CWC', audience: 'All active members', recipients: 152, personalized: true, status: 'completed', unitsReserved: 152, unitsCharged: 150, delivered: 148, failed: 2, createdByName: 'Linda Tetteh', createdAt: ts(daysAgo(3)) }]);
-  W.push([db.doc('sms_messages/seed-sms-2'), { senderId: 'CWC', message: 'Holy Ghost Convention starts on the 5th. Invite a friend! - CWC', audience: 'Everyone', recipients: 176, personalized: false, status: 'scheduled', scheduledAt: new Date(Date.now() + 3 * 86400e3).toISOString(), campaignId: 'auto000123', createdByName: 'Linda Tetteh', createdAt: ts(daysAgo(1)) }]);
+  [['Sunday reminder', 'Hello {first_name|Beloved}, join us this Sunday at 7:30am or 10am at Restoration Grace Chapel International. Come expecting! - RGCI', 'Reminder'], ['Birthday wishes', 'Happy birthday {first_name|Beloved}! RGCI celebrates you. May this new year bring you favour and fulfilment. Num 6:24 - RGCI', 'Birthday'], ['First timer welcome', 'Dear {first_name|Beloved}, thank you for worshipping with us at RGCI. We are glad you came and look forward to seeing you again!', 'Welcome'], ['Absentee check-in', 'Hi {first_name|Beloved}, we missed you at church recently. We are praying for you and hope to see you soon. - RGCI', 'Follow-up']].forEach(([name, body, category]) => W.push([db.collection('sms_templates').doc(), { name, body, category, createdAt: FieldValue.serverTimestamp() }]));
+  W.push([db.doc('sms_messages/seed-sms-1'), { senderId: 'RGCI', message: 'Hello {first_name|Beloved}, join us this Sunday at 7:30am or 10am. Come expecting! - RGCI', audience: 'All active members', recipients: 152, personalized: true, status: 'completed', unitsReserved: 152, unitsCharged: 150, delivered: 148, failed: 2, createdByName: 'Linda Tetteh', createdAt: ts(daysAgo(3)) }]);
+  W.push([db.doc('sms_messages/seed-sms-2'), { senderId: 'RGCI', message: 'Holy Ghost Convention starts on the 5th. Invite a friend! - RGCI', audience: 'Everyone', recipients: 176, personalized: false, status: 'scheduled', scheduledAt: new Date(Date.now() + 3 * 86400e3).toISOString(), campaignId: 'auto000123', createdByName: 'Linda Tetteh', createdAt: ts(daysAgo(1)) }]);
   W.push([db.collection('notifications').doc(), { title: 'New devotional: Strength for Today', body: 'Isaiah 40:31 — start your day in the Word.', url: '/devotionals/dev-1', audience: 'all', kind: 'devotional', createdAt: ts(daysAgo(0)) }]);
   W.push([db.collection('notifications').doc(), { title: 'Holy Ghost Convention 2026', body: 'Three nights of worship and the Word. RSVP now.', url: '/events/evt-1', audience: 'all', kind: 'event', createdAt: ts(daysAgo(2)) }]);
   W.push([db.collection('notifications').doc(), { title: 'Your prayer request was received', body: 'A pastor is praying with you.', url: '/care/care-1', audience: memberUid, kind: 'care', createdAt: ts(daysAgo(0)) }]);
 
   await commitAll(W);
-  console.log(`Seeded ${W.length} documents. Sign in with admin@cwc.test / password123 (or member@cwc.test, 0241234567).`);
+  console.log(`Seeded ${W.length} documents. Sign in with admin@rgci.test / password123 (or member@rgci.test, 0241234567).`);
 }
 
 async function upsertAuth(email, displayName) {

@@ -17,8 +17,8 @@ export default function DevotionalDetail() {
   const { data: list, loading: listLoading } = usePublishedDevotionals(today);
   const realId = id === 'today' ? list[0]?.id : id;
   const { data: d, loading } = useDevotional(realId);
-  const [saved, setSaved] = useLocalState<string[]>('cwc-saved-devotionals', []);
-  const [size, setSize] = useLocalState<number>('cwc-reader-size', 0);
+  const [saved, setSaved] = useLocalState<string[]>('rgci-saved-devotionals', []);
+  const [size, setSize] = useLocalState<number>('rgci-reader-size', 0);
   useDocumentTitle(d?.title ?? 'Devotional');
 
   if (id === 'today' && !listLoading && !list.length) return <Navigate to="/devotionals" replace />;

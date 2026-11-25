@@ -52,8 +52,8 @@ describe('web push encryption', () => {
   });
 
   it('round-trips with a random sender key', async () => {
-    const body = await encryptPayload(utf8('{"title":"Hello CWC"}'), V.uaPublic, V.auth);
-    expect(await decrypt(body, V.uaPrivate, V.uaPublic, V.auth)).toBe('{"title":"Hello CWC"}');
+    const body = await encryptPayload(utf8('{"title":"Hello RGCI"}'), V.uaPublic, V.auth);
+    expect(await decrypt(body, V.uaPrivate, V.uaPublic, V.auth)).toBe('{"title":"Hello RGCI"}');
   });
 });
 

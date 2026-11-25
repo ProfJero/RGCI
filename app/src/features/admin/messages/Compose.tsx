@@ -10,7 +10,7 @@ import { MESSAGE_FIELDS, missingFields, renderMessage, segmentInfo, toGsmSafe } 
 import { isoDate, num, fmtDateTime } from '@/lib/format';
 import { upcomingBirthdays, ACTIVE_STATUSES } from '@/lib/stats';
 import { api, ApiError, apiConfigured } from '@/lib/api';
-import { uid } from '@/lib/utils';
+import { plural, uid } from '@/lib/utils';
 import type { Member } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ export function Compose({ onSent }: { onSent: () => void }) {
   });
   const [pledgeFields] = useState<PledgeField[]>(() => {
     try {
-      return params.get('template') === 'pledge' ? JSON.parse(sessionStorage.getItem('cwc-sms-pledges') || '[]') : [];
+      return params.get('template') === 'pledge' ? JSON.parse(sessionStorage.getItem('rgci-sms-pledges') || '[]') : [];
     } catch {
       return [];
     }
@@ -84,7 +84,7 @@ export function Compose({ onSent }: { onSent: () => void }) {
   const [estimating, setEstimating] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [sending, setSending] = useState(false);
-  const [key, setKey] = useState(() => `cwc-${uid()}`);
+  const [key, setKey] = useState(() => `rgci-${uid()}`);
 
   useEffect(() => {
     if (!senderId && church.smsSenderId) setSenderId(church.smsSenderId);
@@ -168,7 +168,7 @@ export function Compose({ onSent }: { onSent: () => void }) {
   // Any change invalidates the estimate and gets a fresh idempotency key
   useEffect(() => {
     setEstimate(null);
-    setKey(`cwc-${uid()}`);
+    setKey(`rgci-${uid()}`);
   }, [fullMessage, recipients.length, audience, schedule, scheduleAt]);
 
   function insertField(f: { key: string; fallback: string }) {
@@ -193,7 +193,7 @@ export function Compose({ onSent }: { onSent: () => void }) {
       const at = schedule && scheduleAt ? new Date(scheduleAt).toISOString() : null;
       const res = await sendSms({ message: fullMessage, recipients, audience: audienceLabel, senderId: senderId || undefined, scheduleAt: at, idempotencyKey: key });
       if (res.scheduled) toast.success(`Scheduled for ${fmtDateTime(at)} · ${num(recipients.length)} recipients`);
-      else toast.success(`Sending to ${num(res.batch?.totalRecipients ?? recipients.length)} people`, { description: `${num(res.batch?.totalUnitsReserved)} units reserved` });
+      else toast.success(`Sending to ${plural(res.batch?.totalRecipients ?? recipients.length, 'person', 'people')}`, { description: `${num(res.batch?.totalUnitsReserved)} units reserved` });
       setConfirming(false);
       setMessage('');
       sessionStorage.removeItem(SMS_SELECTION_KEY);
@@ -211,7 +211,7 @@ export function Compose({ onSent }: { onSent: () => void }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-4">
-        {!apiConfigured() && <Banner tone="warning" icon={<AlertTriangle />} title="SMS isn’t connected yet">Deploy the CWC Worker and set VITE_API_URL to send through ProfJero Connect. You can still draft messages and templates.</Banner>}
+        {!apiConfigured() && <Banner tone="warning" icon={<AlertTriangle />} title="SMS isn’t connected yet">Deploy the RGCI Worker and set VITE_API_URL to send through ProfJero Connect. You can still draft messages and templates.</Banner>}
 
         <Card className="p-5">
           <h3 className="mb-3 flex items-center gap-2 text-[15px] font-semibold"><Users className="size-4 text-fg-3" /> Who should receive it?</h3>
@@ -292,7 +292,7 @@ export function Compose({ onSent }: { onSent: () => void }) {
                   {senderIds.map((s) => <option key={s}>{s}</option>)}
                 </Select>
               ) : (
-                <Input value={senderId} onChange={(e) => setSenderId(e.target.value.slice(0, 11))} placeholder="e.g. CWC" maxLength={11} />
+                <Input value={senderId} onChange={(e) => setSenderId(e.target.value.slice(0, 11))} placeholder="e.g. RGCI" maxLength={11} />
               )}
             </Field>
             <div className="space-y-3">

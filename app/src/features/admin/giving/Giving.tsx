@@ -100,7 +100,7 @@ export default function Giving() {
   ];
 
   function exportCsv() {
-    downloadCsv(`cwc-giving-${range.from}-to-${range.to}.csv`, filtered.map((g) => ({ Date: g.date, Receipt: g.receiptNo, Giver: g.memberName, Category: g.category, Method: methodLabel(g.method), Reference: g.reference ?? '', Amount: g.amount.toFixed(2), 'Recorded by': g.recordedByName ?? '' })));
+    downloadCsv(`rgci-giving-${range.from}-to-${range.to}.csv`, filtered.map((g) => ({ Date: g.date, Receipt: g.receiptNo, Giver: g.memberName, Category: g.category, Method: methodLabel(g.method), Reference: g.reference ?? '', Amount: g.amount.toFixed(2), 'Recorded by': g.recordedByName ?? '' })));
   }
 
   function printReport() {

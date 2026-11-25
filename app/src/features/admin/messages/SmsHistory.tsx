@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { RefreshCw, MessageSquareText, CalendarX } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { RefreshCw, MessageSquareText, CalendarX, Bot, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSmsMessages } from '@/lib/queries';
 import { api, ApiError } from '@/lib/api';
@@ -15,7 +15,7 @@ import { Modal } from '@/components/ui/dialog';
 import { EmptyState, SkeletonRows, Spinner } from '@/components/ui/feedback';
 import { Segmented } from '@/components/ui/tabs';
 import { useConfirm } from '@/components/ui/confirm';
-import { batchPatch, getBatch, type PjBatch, type PjRecord } from './sms-client';
+import { batchPatch, getBatch, smsApi, type PjBatch, type PjRecord } from './sms-client';
 
 export const SMS_STATUS: Record<string, { label: string; tone: BadgeTone }> = {
   sending: { label: 'Sending', tone: 'info' },
@@ -31,12 +31,12 @@ const RECORD_STATUS: Record<string, BadgeTone> = { delivered: 'success', submitt
 
 export function SmsHistory() {
   const { data, loading } = useSmsMessages();
-  const [filter, setFilter] = useState<'all' | 'scheduled'>('all');
+  const [filter, setFilter] = useState<'all' | 'scheduled' | 'provider'>('all');
   const [open, setOpen] = useState<SmsMessage | null>(null);
   const rows = data.filter((m) => filter === 'all' || m.status === 'scheduled');
 
   const cols: Column<SmsMessage>[] = [
-    { key: 'msg', header: 'Message', cell: (m) => <div className="max-w-md"><div className="line-clamp-1 font-medium">{m.message}</div><div className="truncate text-xs text-fg-3">{m.audience}</div></div> },
+    { key: 'msg', header: 'Message', cell: (m) => <div className="max-w-md"><div className="line-clamp-1 font-medium">{m.message}</div><div className="flex items-center gap-1.5 truncate text-xs text-fg-3">{m.automatic && <Bot className="size-3.5 shrink-0" aria-label="Automatic" />}{m.audience}</div></div> },
     { key: 'to', header: 'To', align: 'right', sort: (m) => m.recipients, cell: (m) => num(m.recipients) },
     { key: 'units', header: 'Units', align: 'right', hideBelow: 'md', cell: (m) => (m.unitsCharged != null ? num(m.unitsCharged) : m.unitsReserved != null ? `~${num(m.unitsReserved)}` : '—') },
     { key: 'status', header: 'Status', cell: (m) => <Badge tone={SMS_STATUS[m.status]?.tone}>{SMS_STATUS[m.status]?.label ?? m.status}</Badge> },
@@ -45,8 +45,17 @@ export function SmsHistory() {
 
   return (
     <>
-      <Segmented className="mb-3" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'All messages' }, { value: 'scheduled', label: `Scheduled (${data.filter((m) => m.status === 'scheduled').length})` }]} />
-      <DataTable
+      <Segmented
+        className="mb-3"
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { value: 'all', label: 'Sent from the app' },
+          { value: 'scheduled', label: `Scheduled (${data.filter((m) => m.status === 'scheduled').length})` },
+          { value: 'provider', label: 'Delivery log' },
+        ]}
+      />
+      {filter === 'provider' ? <ProviderLog /> : <DataTable
         rows={rows}
         columns={cols}
         rowKey={(m) => m.id}
@@ -61,7 +70,7 @@ export function SmsHistory() {
           </div>
         )}
         empty={<EmptyState icon={<MessageSquareText />} title={filter === 'all' ? 'No messages sent yet' : 'Nothing scheduled'} />}
-      />
+      />}
       <MessageDetail m={open} onClose={() => setOpen(null)} />
     </>
   );
@@ -147,5 +156,99 @@ function MessageDetail({ m, onClose }: { m: SmsMessage | null; onClose: () => vo
         </div>
       )}
     </Modal>
+  );
+}
+
+/**
+ * Every send on the ProfJero Connect account, newest first — including automatic
+ * birthday/anniversary messages and anything sent from the ProfJero dashboard.
+ */
+function ProviderLog() {
+  const [rows, setRows] = useState<PjBatch[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [open, setOpen] = useState<PjBatch | null>(null);
+  const [detail, setDetail] = useState<{ batch: PjBatch; records: PjRecord[] } | null>(null);
+
+  const load = useCallback(async (before: string | null) => {
+    setLoading(true);
+    setError('');
+    try {
+      const r = await smsApi.batches(before, 20);
+      setRows((x) => (before ? [...x, ...(r.batches ?? [])] : r.batches ?? []));
+      setCursor(r.nextCursor ?? null);
+    } catch (e) {
+      setError((e as ApiError).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load(null);
+  }, [load]);
+
+  useEffect(() => {
+    if (!open) return setDetail(null);
+    getBatch(open.id).then(setDetail).catch((e) => toast.error((e as ApiError).message));
+  }, [open]);
+
+  const cols: Column<PjBatch>[] = [
+    { key: 'msg', header: 'Message', cell: (b) => <div className="max-w-md"><div className="line-clamp-1 font-medium">{b.message}</div><div className="truncate font-mono text-xs text-fg-3">{b.senderId} · {b.id}</div></div> },
+    { key: 'to', header: 'To', align: 'right', cell: (b) => num(b.totalRecipients) },
+    { key: 'ok', header: 'Delivered', align: 'right', hideBelow: 'md', cell: (b) => num(b.deliveredCount) },
+    { key: 'units', header: 'Units', align: 'right', hideBelow: 'md', cell: (b) => num(b.totalUnitsCharged || b.totalUnitsReserved) },
+    { key: 'status', header: 'Status', cell: (b) => <Badge tone={SMS_STATUS[b.status]?.tone}>{SMS_STATUS[b.status]?.label ?? b.status}</Badge> },
+    { key: 'when', header: 'When', hideBelow: 'lg', cell: (b) => <span className="whitespace-nowrap text-fg-2">{relative(b.createdAt)}</span> },
+  ];
+
+  return (
+    <>
+      {error && <p className="mb-3 text-sm text-danger">{error}</p>}
+      <DataTable
+        rows={rows}
+        columns={cols}
+        rowKey={(b) => b.id}
+        onRowClick={setOpen}
+        isLoading={loading && !rows.length}
+        loading={<SkeletonRows />}
+        mobile={(b) => (
+          <div>
+            <div className="flex items-center justify-between gap-2"><span className="truncate font-mono text-xs text-fg-3">{b.senderId}</span><Badge tone={SMS_STATUS[b.status]?.tone}>{SMS_STATUS[b.status]?.label ?? b.status}</Badge></div>
+            <p className="mt-0.5 line-clamp-2 text-[13px]">{b.message}</p>
+            <p className="mt-1 text-xs text-fg-3">{num(b.totalRecipients)} recipients · {num(b.deliveredCount)} delivered · {relative(b.createdAt)}</p>
+          </div>
+        )}
+        empty={<EmptyState icon={<Radio />} title="No sends on this account yet" />}
+      />
+      {cursor && (
+        <div className="mt-3 text-center">
+          <Button size="sm" variant="ghost" onClick={() => load(cursor)} loading={loading}>Load older sends</Button>
+        </div>
+      )}
+      <Modal open={!!open} onOpenChange={(o) => !o && setOpen(null)} title={open ? `Send ${open.id}` : ''} description={open ? `${SMS_STATUS[open.status]?.label ?? open.status} · ${fmtDateTime(open.createdAt)} · from ${open.senderId}` : ''} side>
+        {open && (
+          <div className="space-y-5">
+            <p className="whitespace-pre-wrap rounded-xl bg-surface-2 p-3 text-sm">{open.message}</p>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[['Recipients', open.totalRecipients], ['Delivered', (detail?.batch ?? open).deliveredCount], ['Failed', (detail?.batch ?? open).failedCount]].map(([l, v]) => (
+                <div key={l as string} className="rounded-xl border border-line p-3"><div className="text-lg font-semibold">{num(v as number)}</div><div className="text-xs text-fg-3">{l}</div></div>
+              ))}
+            </div>
+            {!detail ? <Spinner /> : (
+              <ul className="divide-y divide-line rounded-xl border border-line">
+                {detail.records.slice(0, 300).map((r) => (
+                  <li key={r.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <span className="tabular">{formatPhone(r.recipient)}</span>
+                    <Badge tone={RECORD_STATUS[r.status] ?? 'neutral'}>{r.status}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </Modal>
+    </>
   );
 }

@@ -1,10 +1,10 @@
 {
-  "name": "cwc-api",
+  "name": "rgci-api",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "author": "ProfJero",
-  "description": "Christian Worship Centre API — ProfJero Connect SMS proxy, Web Push and Cloudinary signing on Cloudflare Workers.",
+  "description": "Restoration Grace Chapel International API — ProfJero Connect SMS proxy, Web Push and Cloudinary signing on Cloudflare Workers.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

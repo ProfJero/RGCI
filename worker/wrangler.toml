@@ -1,5 +1,5 @@
-# Christian Worship Centre API — crafted by ProfJero
-name = "cwc-api"
+# Restoration Grace Chapel International API — crafted by ProfJero
+name = "rgci-api"
 main = "src/index.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]

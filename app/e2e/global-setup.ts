@@ -2,12 +2,12 @@ import { chromium, type FullConfig } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 export const ACCOUNTS = {
-  admin: 'admin@cwc.test',
-  pastor: 'pastor@cwc.test',
-  treasurer: 'treasurer@cwc.test',
-  secretary: 'secretary@cwc.test',
-  usher: 'usher@cwc.test',
-  member: 'member@cwc.test',
+  admin: 'admin@rgci.test',
+  pastor: 'pastor@rgci.test',
+  treasurer: 'treasurer@rgci.test',
+  secretary: 'secretary@rgci.test',
+  usher: 'usher@rgci.test',
+  member: 'member@rgci.test',
   phoneMember: '0241234567',
 } as const;
 

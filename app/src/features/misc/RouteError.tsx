@@ -1,7 +1,7 @@
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CwcLogo } from '@/components/brand';
+import { ChurchLogo } from '@/components/brand';
 
 export function RouteError() {
   const error = useRouteError();
@@ -10,7 +10,7 @@ export function RouteError() {
   return (
     <div className="grid min-h-dvh place-items-center bg-bg px-6">
       <div className="max-w-sm text-center">
-        <CwcLogo className="mx-auto mb-6 w-20 text-brand-800 dark:text-brand-300" />
+        <ChurchLogo className="mx-auto mb-6 w-20 text-brand-800 dark:text-brand-300" />
         <h1 className="text-lg font-semibold">{chunk ? 'The app was updated' : 'Something went wrong'}</h1>
         <p className="mt-2 text-sm text-fg-3">
           {chunk ? 'A newer version is available. Refresh to continue.' : message}

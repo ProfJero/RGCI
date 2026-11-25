@@ -7,7 +7,7 @@ import { youtubeId } from '@/lib/utils';
 import { cld } from '@/lib/cloudinary';
 import { SearchInput, Select } from '@/components/ui/input';
 import { EmptyState, SkeletonCards } from '@/components/ui/feedback';
-import { CwcLogo } from '@/components/brand';
+import { ChurchLogo } from '@/components/brand';
 import { MemberPage } from './ui';
 
 export function sermonThumb(s: { thumbnailUrl?: string; videoUrl?: string }) {
@@ -35,7 +35,7 @@ export default function Sermons() {
             return (
               <Link key={s.id} to={`/sermons/${s.id}`} className="card group overflow-hidden">
                 <div className="relative grid aspect-video place-items-center overflow-hidden bg-brand-900">
-                  {thumb ? <img src={thumb} alt="" className="absolute inset-0 size-full object-cover" loading="lazy" /> : <CwcLogo className="w-32 text-white/15" />}
+                  {thumb ? <img src={thumb} alt="" className="absolute inset-0 size-full object-cover" loading="lazy" /> : <ChurchLogo className="w-32 text-white/15" />}
                   <span className="relative grid size-12 place-items-center rounded-full bg-black/45 text-white backdrop-blur transition-transform group-hover:scale-110">{s.videoUrl ? <PlaySquare className="size-6" /> : <Headphones className="size-6" />}</span>
                 </div>
                 <div className="p-3.5">

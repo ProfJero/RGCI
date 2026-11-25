@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath, URL } from 'node:url';
 
-// Christian Worship Centre — Church management PWA. Crafted by ProfJero.
+// Restoration Grace Chapel International — Church management PWA. Crafted by ProfJero.
 import pkg from './package.json' with { type: 'json' };
 
 export default defineConfig({
@@ -29,9 +29,9 @@ export default defineConfig({
       },
       manifest: {
         id: '/',
-        name: 'Christian Worship Centre',
-        short_name: 'CWC',
-        description: 'Christian Worship Centre — church life in your pocket: devotionals, events, giving, prayer and care.',
+        name: 'Restoration Grace Chapel International',
+        short_name: 'RGCI',
+        description: 'Restoration Grace Chapel International — church life in your pocket: devotionals, events, giving, prayer and care.',
         lang: 'en-GH',
         start_url: '/?source=pwa',
         scope: '/',
@@ -39,7 +39,7 @@ export default defineConfig({
         display_override: ['window-controls-overlay', 'standalone'],
         orientation: 'any',
         background_color: '#ffffff',
-        theme_color: '#1e3a8a',
+        theme_color: '#4c229a',
         categories: ['lifestyle', 'social', 'productivity'],
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

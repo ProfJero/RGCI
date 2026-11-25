@@ -10,7 +10,7 @@ import { Segmented } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState, SkeletonCards } from '@/components/ui/feedback';
 import { EventForm } from './EventForm';
-import { CwcLogo } from '@/components/brand';
+import { ChurchLogo } from '@/components/brand';
 
 export function EventDateBadge({ date, className = '' }: { date: string; className?: string }) {
   return (
@@ -53,7 +53,7 @@ export default function AdminEvents() {
           {list.map((e) => (
             <Link key={e.id} to={`/admin/events/${e.id}`} className="card group overflow-hidden transition-colors hover:border-line-strong">
               <div className="relative aspect-[16/8] overflow-hidden bg-[linear-gradient(135deg,var(--color-brand-800),var(--color-brand-600))]">
-                {e.imageUrl ? <img src={cld(e.imageUrl, { w: 640 })} alt="" className="size-full object-cover" loading="lazy" /> : <CwcLogo className="absolute -bottom-6 -right-6 w-44 text-white/10" />}
+                {e.imageUrl ? <img src={cld(e.imageUrl, { w: 640 })} alt="" className="size-full object-cover" loading="lazy" /> : <ChurchLogo className="absolute -bottom-6 -right-6 w-44 text-white/10" />}
                 <EventDateBadge date={e.startAt} className="absolute left-3 top-3 shadow-sm" />
                 {e.status === 'draft' && <Badge className="absolute right-3 top-3">Draft</Badge>}
               </div>

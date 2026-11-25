@@ -11,7 +11,7 @@ import { MemberPage } from './ui';
 
 export default function Devotionals() {
   const { data, loading } = usePublishedDevotionals(isoDate());
-  const [saved] = useLocalState<string[]>('cwc-saved-devotionals', []);
+  const [saved] = useLocalState<string[]>('rgci-saved-devotionals', []);
   const [tab, setTab] = useState<'all' | 'saved'>('all');
   const list = tab === 'saved' ? data.filter((d) => saved.includes(d.id)) : data;
   return (

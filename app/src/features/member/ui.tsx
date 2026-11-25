@@ -4,7 +4,7 @@ import { ChevronRight, CalendarDays, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cld } from '@/lib/cloudinary';
 import { fmtDate, fmtTime, friendlyDay } from '@/lib/format';
-import { CwcLogo } from '@/components/brand';
+import { ChurchLogo } from '@/components/brand';
 import type { ChurchEvent } from '@/lib/types';
 import { useDocumentTitle } from '@/lib/hooks';
 
@@ -52,7 +52,7 @@ export function EventCard({ e, className }: { e: ChurchEvent; className?: string
   return (
     <Link to={`/events/${e.id}`} className={cn('card group block w-[78vw] max-w-[340px] shrink-0 snap-start overflow-hidden sm:w-auto sm:max-w-none', className)}>
       <div className="relative aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,var(--color-brand-800),var(--color-brand-600))]">
-        {e.imageUrl ? <img src={cld(e.imageUrl, { w: 640 })} alt="" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" /> : <CwcLogo className="absolute -bottom-6 -right-8 w-48 text-white/10" />}
+        {e.imageUrl ? <img src={cld(e.imageUrl, { w: 640 })} alt="" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" /> : <ChurchLogo className="absolute -bottom-6 -right-8 w-48 text-white/10" />}
         <span className="absolute left-3 top-3 rounded-lg bg-surface/95 px-2 py-1 text-center leading-none shadow-sm">
           <span className="block text-[10px] font-bold uppercase text-danger">{fmtDate(e.startAt, 'MMM')}</span>
           <span className="block text-base font-semibold text-fg">{fmtDate(e.startAt, 'd')}</span>

@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { format, subDays, startOfMonth, subMonths } from 'date-fns';
-import { Users, CalendarCheck2, HandCoins, HeartHandshake, UserPlus, Send, Cake, Route, CalendarDays, ChevronRight, Sparkles } from 'lucide-react';
+import { Users, CalendarCheck2, HandCoins, HeartHandshake, UserPlus, Send, Cake, Route, CalendarDays, ChevronRight, Sparkles, Heart, MessageSquareText, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router';
 import { useAuth } from '@/lib/auth';
-import { useCareRequests, useEvents, useExpensesSince, useFollowUps, useGiftsSince, useMembers, useServices } from '@/lib/queries';
-import { attendanceByDate, change, monthlyFinance, upcomingBirthdays, ACTIVE_STATUSES } from '@/lib/stats';
+import { useCareRequests, useEvents, useExpensesSince, useFollowUps, useGiftsSince, useMembers, useServices, useSmsMessages } from '@/lib/queries';
+import { attendanceByDate, change, monthlyFinance, upcomingAnniversaries, upcomingBirthdays, ACTIVE_STATUSES } from '@/lib/stats';
+import { isLowBalance, useSmsBalance } from '@/lib/sms-balance';
+import { apiConfigured } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { cedis, friendlyDay, greeting, isoDate, num, relative } from '@/lib/format';
 import { sum } from '@/lib/utils';
 import { Page, PageHeader } from '@/components/ui/page';
@@ -58,6 +61,14 @@ export default function Dashboard() {
   }, [gifts.data]);
 
   const birthdays = useMemo(() => upcomingBirthdays(members.data, 7), [members.data]);
+  const celebrations = useMemo(
+    () =>
+      [
+        ...birthdays.map((b) => ({ kind: 'birthday' as const, member: b.member, date: b.date, inDays: b.inDays, detail: b.turning ? `turns ${b.turning}` : 'Birthday' })),
+        ...upcomingAnniversaries(members.data, 7).map((a) => ({ kind: 'anniversary' as const, member: a.member, date: a.date, inDays: a.inDays, detail: a.years && a.years > 0 ? `${a.years} year${a.years === 1 ? '' : 's'} married` : 'Wedding anniversary' })),
+      ].sort((a, b) => a.inDays - b.inDays),
+    [birthdays, members.data],
+  );
   const openCare = care.data.filter((c) => c.status === 'new' || c.status === 'in_progress');
   const dueFollowUps = followups.data.filter((f) => !['integrated', 'closed'].includes(f.stage));
   const upcoming = events.data.filter((e) => e.startAt >= isoDate()).sort((a, b) => a.startAt.localeCompare(b.startAt)).slice(0, 4);
@@ -130,20 +141,20 @@ export default function Dashboard() {
           empty="Record a service to start tracking attendance."
         />
         <Card>
-          <CardHeader title="Birthdays this week" icon={<Cake />} action={can('messaging.sms') && birthdays.length > 0 ? <CardLink to="/admin/messages?compose=1&audience=birthdays">Send wishes</CardLink> : undefined} />
-          {birthdays.length === 0 ? (
-            <EmptyState compact title="No birthdays this week" description="We’ll list them here as they come up." />
+          <CardHeader title="Celebrations this week" description="Birthdays & wedding anniversaries" icon={<Cake />} action={can('messaging.sms') && birthdays.length > 0 ? <CardLink to="/admin/messages?compose=1&audience=birthdays">Send wishes</CardLink> : undefined} />
+          {celebrations.length === 0 ? (
+            <EmptyState compact title="No celebrations this week" description="Birthdays and anniversaries will show here as they come up." />
           ) : (
             <ul className="max-h-[280px] divide-y divide-line overflow-y-auto pb-2">
-              {birthdays.slice(0, 12).map(({ member, date, inDays, turning }) => (
-                <li key={member.id}>
+              {celebrations.slice(0, 14).map(({ kind, member, date, inDays, detail }) => (
+                <li key={`${kind}-${member.id}`}>
                   <Link to={`/admin/people/${member.id}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-2">
                     <Avatar name={member.fullName} src={member.photoUrl} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{member.fullName}</span>
-                      <span className="block text-xs text-fg-3">
-                        {format(date, 'EEE d MMM')}
-                        {turning ? ` · turns ${turning}` : ''}
+                      <span className="flex items-center gap-1 text-xs text-fg-3">
+                        {kind === 'anniversary' ? <Heart className="size-3 text-danger" aria-label="Anniversary" /> : <Cake className="size-3 text-gold-600" aria-label="Birthday" />}
+                        {format(date, 'EEE d MMM')} · {detail}
                       </span>
                     </span>
                     {inDays === 0 ? <Badge tone="gold">Today</Badge> : <span className="text-xs text-fg-3">in {inDays}d</span>}
@@ -225,6 +236,7 @@ export default function Dashboard() {
             )}
           </Card>
         )}
+        {can('messaging.billing') && apiConfigured() && <SmsCard />}
         {can('events.manage') && (
           <Card>
             <CardHeader title="Upcoming events" icon={<CalendarDays />} action={<CardLink to="/admin/events" />} />
@@ -255,5 +267,44 @@ export default function Dashboard() {
         )}
       </div>
     </Page>
+  );
+}
+
+/** SMS wallet at a glance: balance, low-balance warning and this month's sending. */
+function SmsCard() {
+  const { can } = useAuth();
+  const church = useChurch();
+  const bal = useSmsBalance();
+  const history = useSmsMessages(can('messaging.sms'));
+  const low = isLowBalance(bal.units, bal.low, church.smsLowBalanceUnits);
+  const month = format(new Date(), 'yyyy-MM');
+  const sent = history.data.filter((x) => x.status !== 'scheduled' && x.status !== 'cancelled' && format(x.createdAt?.toDate?.() ?? new Date(0), 'yyyy-MM') === month);
+  const units = sum(sent, (x) => x.unitsCharged ?? x.unitsReserved ?? 0);
+  const scheduled = history.data.filter((x) => x.status === 'scheduled').length;
+  return (
+    <Card>
+      <CardHeader title="SMS credits" description="ProfJero Connect wallet" icon={<MessageSquareText />} action={<CardLink to="/admin/messages?tab=wallet">Wallet</CardLink>} />
+      <div className="px-5 pb-5">
+        <div className={cn('rounded-xl border p-4', low ? 'border-warning/25 bg-warning-soft' : 'border-line bg-surface-2/50')}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[13px] font-medium text-fg-3">Units available</span>
+            {low && <Badge tone="warning"><AlertTriangle className="size-3" /> Low</Badge>}
+          </div>
+          <div className="mt-1 text-3xl font-semibold tracking-tight tabular" data-testid="dashboard-sms-units">{bal.units == null ? (bal.loading ? '…' : '—') : num(bal.units)}</div>
+          {bal.updatedAt && <div className="mt-0.5 text-xs text-fg-3">Updated {relative(bal.updatedAt)}</div>}
+        </div>
+        {can('messaging.sms') && (
+          <dl className="mt-3 grid grid-cols-3 gap-2 text-center text-xs text-fg-3">
+            <div className="rounded-lg border border-line py-2"><dd className="text-base font-semibold text-fg tabular">{num(sent.length)}</dd><dt>sends this month</dt></div>
+            <div className="rounded-lg border border-line py-2"><dd className="text-base font-semibold text-fg tabular">{num(units)}</dd><dt>units used</dt></div>
+            <div className="rounded-lg border border-line py-2"><dd className="text-base font-semibold text-fg tabular">{num(scheduled)}</dd><dt>scheduled</dt></div>
+          </dl>
+        )}
+        <div className="mt-3 flex gap-2">
+          <ButtonLink to="/admin/messages?tab=wallet" size="sm" variant={low ? 'gold' : 'soft'} icon={<Sparkles />} className="flex-1">Buy units</ButtonLink>
+          {can('messaging.sms') && <ButtonLink to="/admin/messages" size="sm" variant="outline" icon={<Send />} className="flex-1">Send SMS</ButtonLink>}
+        </div>
+      </div>
+    </Card>
   );
 }

@@ -81,8 +81,8 @@ export default function Users() {
       await sendPasswordResetEmail(auth, u.email);
       return toast.success(`Reset link sent to ${u.email}`);
     }
-    if (!apiConfigured()) return toast.error('Phone-only accounts need the CWC Worker (with a service account) to reset passwords.');
-    const temp = `Cwc-${Math.random().toString(36).slice(2, 8)}`;
+    if (!apiConfigured()) return toast.error('Phone-only accounts need the RGCI Worker (with a service account) to reset passwords.');
+    const temp = `Rgci-${Math.random().toString(36).slice(2, 8)}`;
     try {
       await api(`/v1/admin/users/${u.uid}/password`, { method: 'POST', json: { password: temp } });
       toast.success(`Temporary password: ${temp}`, { duration: 30000, description: 'Share it privately; they should change it after signing in.' });

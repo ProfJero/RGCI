@@ -1,7 +1,7 @@
 {
   "projects": {
-    "default": "demo-cwc",
-    "deployments": "cwc-ch"
+    "default": "demo-rgci",
+    "production": "rgci-management"
   },
   "targets": {},
   "etags": {}

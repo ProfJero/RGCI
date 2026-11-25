@@ -9,7 +9,7 @@ export async function signUpload(env: Env, folder: string, staff: boolean) {
   if (!FOLDERS.includes(folder)) throw new HttpError(400, 'Unknown folder');
   if (!staff && folder !== 'avatars') throw new HttpError(403, 'Members can only upload a profile photo');
   const timestamp = Math.floor(Date.now() / 1000);
-  const fullFolder = `cwc/${folder}`;
+  const fullFolder = `rgci/${folder}`;
   const toSign = `folder=${fullFolder}&timestamp=${timestamp}${env.CLOUDINARY_API_SECRET}`;
   const signature = hex(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(toSign)));
   return { signature, timestamp, apiKey: env.CLOUDINARY_API_KEY, cloudName: env.CLOUDINARY_CLOUD_NAME, folder: fullFolder };

@@ -79,7 +79,7 @@ export function GiftForm({ open, onOpenChange, presetMember }: { open: boolean; 
         memberName: who?.name ?? 'Anonymous',
         date,
         notes: notes.trim(),
-        receiptNo: receiptNumber(church.shortName || 'CWC', new Date(date)),
+        receiptNo: receiptNumber(church.shortName || 'RGCI', new Date(date)),
         pledgeId: pledge?.id ?? null,
         campaignId: pledge?.campaignId ?? (campaignId || null),
         recordedBy: getActor()?.uid,

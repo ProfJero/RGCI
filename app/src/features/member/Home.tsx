@@ -12,7 +12,7 @@ import { cld } from '@/lib/cloudinary';
 import { enablePush, getPushState, needsInstallForPush, type PushState } from '@/lib/push';
 import type { Service } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { CwcLogo } from '@/components/brand';
+import { ChurchLogo } from '@/components/brand';
 import { MemberPage, SectionTitle, Rail, EventCard, QuickAction } from './ui';
 import { toast } from 'sonner';
 
@@ -72,8 +72,8 @@ export default function Home() {
       ) : devotional ? (
         <Link to={`/devotionals/${devotional.id}`} className="group relative block overflow-hidden rounded-3xl bg-brand-900 p-5 text-white shadow-[var(--shadow-pop)] sm:p-7">
           {devotional.imageUrl && <img src={cld(devotional.imageUrl, { w: 900 })} alt="" className="absolute inset-0 size-full object-cover opacity-35" />}
-          <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_0%_0%,rgb(59_99_241/0.55),transparent_60%),radial-gradient(70%_60%_at_100%_100%,rgb(201_154_46/0.35),transparent_60%)]" />
-          <CwcLogo className="absolute -bottom-10 -right-10 w-64 text-white/[0.07]" />
+          <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_0%_0%,rgb(138_82_239/0.55),transparent_60%),radial-gradient(70%_60%_at_100%_100%,rgb(201_154_46/0.35),transparent_60%)]" />
+          <ChurchLogo className="absolute -bottom-10 -right-10 w-64 text-white/[0.07]" />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
               <BookOpen className="size-3.5" /> {devotional.date === today ? 'Today’s devotional' : fmtDate(devotional.date, 'EEE d MMM')}
@@ -141,7 +141,7 @@ export default function Home() {
           <SectionTitle to="/sermons">Latest sermon</SectionTitle>
           <Link to={`/sermons/${sermon.id}`} className="card flex items-center gap-4 overflow-hidden p-3">
             <div className="relative grid aspect-video w-32 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-900 sm:w-44">
-              {(sermon.thumbnailUrl || youtubeId(sermon.videoUrl)) ? <img src={sermon.thumbnailUrl ? cld(sermon.thumbnailUrl, { w: 360 }) : `https://i.ytimg.com/vi/${youtubeId(sermon.videoUrl)}/mqdefault.jpg`} alt="" className="absolute inset-0 size-full object-cover" loading="lazy" /> : <CwcLogo className="w-20 text-white/20" />}
+              {(sermon.thumbnailUrl || youtubeId(sermon.videoUrl)) ? <img src={sermon.thumbnailUrl ? cld(sermon.thumbnailUrl, { w: 360 }) : `https://i.ytimg.com/vi/${youtubeId(sermon.videoUrl)}/mqdefault.jpg`} alt="" className="absolute inset-0 size-full object-cover" loading="lazy" /> : <ChurchLogo className="w-20 text-white/20" />}
               <PlaySquare className="relative size-7 text-white drop-shadow" />
             </div>
             <div className="min-w-0">

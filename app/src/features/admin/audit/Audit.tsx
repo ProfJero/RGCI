@@ -29,7 +29,7 @@ export default function Audit() {
   ];
   return (
     <Page>
-      <PageHeader title="Activity log" description="A tamper-proof record of important changes: who did what, and when." actions={<Button size="sm" variant="outline" onClick={() => downloadCsv('cwc-activity-log.csv', rows.map((l) => ({ When: fmtDateTime(l.at), Who: l.byName, Action: l.action, Area: l.entity, Summary: l.summary })))}>Export</Button>} />
+      <PageHeader title="Activity log" description="A tamper-proof record of important changes: who did what, and when." actions={<Button size="sm" variant="outline" onClick={() => downloadCsv('rgci-activity-log.csv', rows.map((l) => ({ When: fmtDateTime(l.at), Who: l.byName, Action: l.action, Area: l.entity, Summary: l.summary })))}>Export</Button>} />
       <Toolbar>
         <SearchInput value={q} onChange={setQ} placeholder="Search activity" className="sm:w-72" />
         <Select value={entity} onChange={(e) => setEntity(e.target.value)} className="sm:w-48" aria-label="Area">

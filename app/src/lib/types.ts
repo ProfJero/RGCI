@@ -63,6 +63,7 @@ export interface Member {
   occupation?: string;
   maritalStatus?: 'single' | 'married' | 'widowed' | 'divorced' | '';
   anniversary?: string; // wedding anniversary YYYY-MM-DD
+  anniversaryMonthDay?: string; // MM-DD for anniversary queries
   membershipStatus: MembershipStatus;
   joinDate?: string;
   baptismDate?: string;
@@ -366,6 +367,8 @@ export interface SmsMessage {
   failed?: number;
   scheduledAt?: string | null;
   campaignId?: string | null;
+  /** Sent by a daily automation (birthdays, anniversaries) rather than a person. */
+  automatic?: boolean;
   error?: string | null;
   createdBy?: ID;
   createdByName?: string;
@@ -442,4 +445,9 @@ export interface ChurchSettings {
   birthdaySms?: string;
   autoBirthdaySms?: boolean;
   autoWelcomeSms?: boolean;
+  anniversarySms?: string;
+  autoAnniversarySms?: boolean;
+  /** Alert staff when the SMS wallet drops to this many units (0/empty = provider's own low-balance flag). */
+  smsLowBalanceUnits?: number | null;
+  smsLowBalanceAlert?: boolean;
 }

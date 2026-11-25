@@ -49,6 +49,23 @@ export function upcomingBirthdays(members: Member[], days = 7, from = new Date()
   return out.sort((a, b) => a.inDays - b.inDays);
 }
 
+/** Wedding anniversaries of married members in the next `days` days. */
+export function upcomingAnniversaries(members: Member[], days = 7, from = new Date()) {
+  const out: { member: Member; date: Date; inDays: number; years: number | null }[] = [];
+  for (const m of members) {
+    if (!m.anniversary || m.maritalStatus !== 'married' || ['deceased', 'transferred'].includes(m.membershipStatus)) continue;
+    const wed = parseISO(m.anniversary);
+    for (let i = 0; i < days; i++) {
+      const d = addDays(from, i);
+      if (d.getMonth() === wed.getMonth() && d.getDate() === wed.getDate()) {
+        out.push({ member: m, date: d, inDays: i, years: wed.getFullYear() > 1900 ? d.getFullYear() - wed.getFullYear() : null });
+        break;
+      }
+    }
+  }
+  return out.sort((a, b) => a.inDays - b.inDays);
+}
+
 export function change(current: number, previous: number) {
   if (!previous) return null;
   return (current - previous) / previous;

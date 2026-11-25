@@ -16,14 +16,14 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), { deny
 // Code chunks not precached (admin screens, charts): hashed, so cache-first forever.
 registerRoute(
   ({ url, request }) => url.origin === self.location.origin && url.pathname.startsWith('/assets/') && request.destination === 'script',
-  new CacheFirst({ cacheName: 'cwc-code', plugins: [new ExpirationPlugin({ maxEntries: 120, purgeOnQuotaError: true })] }),
+  new CacheFirst({ cacheName: 'rgci-code', plugins: [new ExpirationPlugin({ maxEntries: 120, purgeOnQuotaError: true })] }),
 );
 
 // Cloudinary media — cache-first, capped so phones don't fill up.
 registerRoute(
   ({ url }) => url.hostname === 'res.cloudinary.com',
   new CacheFirst({
-    cacheName: 'cwc-media',
+    cacheName: 'rgci-media',
     plugins: [new ExpirationPlugin({ maxEntries: 250, maxAgeSeconds: 60 * 60 * 24 * 30, purgeOnQuotaError: true })],
   }),
 );
@@ -31,7 +31,7 @@ registerRoute(
 // YouTube thumbnails for sermons
 registerRoute(
   ({ url }) => url.hostname === 'i.ytimg.com',
-  new StaleWhileRevalidate({ cacheName: 'cwc-thumbs', plugins: [new ExpirationPlugin({ maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 14 })] }),
+  new StaleWhileRevalidate({ cacheName: 'rgci-thumbs', plugins: [new ExpirationPlugin({ maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 14 })] }),
 );
 
 self.addEventListener('message', (event) => {
@@ -58,7 +58,7 @@ self.addEventListener('push', (event) => {
   } catch {
     data = { body: event.data?.text() };
   }
-  const title = data.title || 'Christian Worship Centre';
+  const title = data.title || 'Restoration Grace Chapel International';
   const options: NotificationOptions & { image?: string; renotify?: boolean; vibrate?: number[] } = {
     body: data.body || '',
     icon: data.icon || '/icons/icon-192.png',
